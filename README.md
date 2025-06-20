@@ -10,6 +10,8 @@ Ferramenta CLI para análise de mudanças git e geração de commits via IA.
 - ✅ Geração de prompts para IA criar mensagens de commit
 - ✅ Integração com IA para geração automática de commits
 - ✅ Commit automático com mensagens geradas por IA
+- ✅ **Proteção de branches principais** (master, main, develop)
+- ✅ Validação de boas práticas de desenvolvimento  
 - ✅ Suporte multilíngue (pt-BR, es-UY, en-US)
 - ✅ Configuração flexível de IA (URL, API Key, modelo)
 
@@ -86,12 +88,18 @@ gromit analyze --show-prompt
 ⚠️ **Requer configuração obrigatória** (URL da IA + API Key)
 
 Funcionalidade completa de commit automático:
+- **Valida branch protegida** - Impede commits em master, main ou develop
 - Analisa as mudanças no repositório
 - Gera prompt otimizado para IA
 - Consulta a IA para criar mensagem de commit
 - Exibe a mensagem gerada para aprovação
 - Adiciona arquivos ao stage (`git add .`)
 - Faz o commit automaticamente
+
+**🚫 Proteção de Branches:**
+- Não permite commits diretos em: `master`, `main`, `develop`
+- Exibe mensagens informativas com sugestões de branches alternativas
+- Garante boas práticas de desenvolvimento com feature branches
 
 ```bash
 # Commit automático com IA

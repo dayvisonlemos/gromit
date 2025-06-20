@@ -258,6 +258,11 @@ gromit push --force --show-diff
 # Cole a URL no navegador para criar o PR automaticamente:
 # https://github.com/user/repo/compare/master...feature/auth?quick_pull=1&title=...
 #
+# Se a descrição for muito longa (>800 caracteres):
+# ⚠️  DESCRIÇÃO TRUNCADA NA URL
+# 1. Abra a URL no navegador (título e parte da descrição preenchidos)
+# 2. Cole a descrição completa mostrada no terminal
+#
 # 💡 Para apenas análise: gromit analyze --push
 ```
 

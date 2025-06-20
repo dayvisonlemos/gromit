@@ -296,7 +296,7 @@ export async function pushChanges(
 
     // 4. Gerar URL do PR
     console.log(chalk.cyan('4. 🔗 Gerando URL automática do Pull Request...'));
-    const prUrl = await generatePRUrl(git, currentBranch, title, description);
+    const { url: prUrl, wasDescriptionTruncated } = await generatePRUrl(git, currentBranch, title, description);
 
     if (prUrl) {
       // 5. Copiar para clipboard
@@ -311,9 +311,33 @@ export async function pushChanges(
       console.log(chalk.green('🔗 URL DO PULL REQUEST COPIADA PARA O CLIPBOARD!'));
       console.log(chalk.gray('Cole a URL no navegador para criar o PR automaticamente:'));
       console.log(chalk.cyan(prUrl));
+      
+      // Avisa se a descrição foi truncada
+      if (wasDescriptionTruncated) {
+        console.log('');
+        console.log(chalk.yellow('⚠️  DESCRIÇÃO TRUNCADA NA URL'));
+        console.log(chalk.gray('A descrição completa foi truncada para caber na URL.'));
+        console.log(chalk.blue('💡 PRÓXIMOS PASSOS:'));
+        console.log('1. Abra a URL no navegador (título e parte da descrição já estarão preenchidos)');
+        console.log('2. Cole a descrição completa abaixo no campo de descrição:');
+        console.log('');
+        console.log(chalk.cyan('--- DESCRIÇÃO COMPLETA PARA COLAR ---'));
+        console.log(description);
+        console.log(chalk.cyan('--- FIM DA DESCRIÇÃO ---'));
+        
+        // Também copia a descrição completa para um segundo clipboard se disponível
+        console.log('');
+        console.log(chalk.yellow('💡 A descrição completa também está disponível para copiar acima.'));
+      }
     } else {
       console.log(chalk.yellow('⚠️  Não foi possível gerar URL automática do PR'));
       console.log('💡 Crie o PR manualmente no GitHub/GitLab');
+      console.log('');
+      console.log(chalk.blue('📋 TÍTULO:'));
+      console.log(title);
+      console.log('');
+      console.log(chalk.blue('📝 DESCRIÇÃO:'));
+      console.log(description);
     }
   } catch (error) {
     spinner.fail(`Erro ao processar push: ${error}`);
@@ -528,29 +552,34 @@ async function generatePRUrl(
   branch: string,
   title: string,
   description: string
-): Promise<string | null> {
+): Promise<{ url: string | null; wasDescriptionTruncated: boolean }> {
   try {
     // Obtém a URL do remote origin
     const remotes = await git.getRemotes(true);
     const origin = remotes.find((remote: any) => remote.name === 'origin');
 
     if (!origin || !origin.refs || !origin.refs.push) {
-      return null;
+      return { url: null, wasDescriptionTruncated: false };
     }
 
     const repoUrl = origin.refs.push;
+    
+    // Verifica se a descrição será truncada
+    const wasDescriptionTruncated = description.length > 800;
 
     // Detecta se é GitHub ou GitLab
     if (repoUrl.includes('github.com')) {
-      return generateGitHubPRUrl(repoUrl, branch, title, description);
+      const url = generateGitHubPRUrl(repoUrl, branch, title, description);
+      return { url, wasDescriptionTruncated };
     } else if (repoUrl.includes('gitlab.com') || repoUrl.includes('gitlab')) {
-      return generateGitLabPRUrl(repoUrl, branch, title, description);
+      const url = generateGitLabPRUrl(repoUrl, branch, title, description);
+      return { url, wasDescriptionTruncated };
     }
 
-    return null;
+    return { url: null, wasDescriptionTruncated: false };
   } catch (error) {
     console.error(chalk.red(`Erro ao gerar URL do PR: ${error}`));
-    return null;
+    return { url: null, wasDescriptionTruncated: false };
   }
 }
 
@@ -582,12 +611,15 @@ function generateGitHubPRUrl(
   description: string
 ): string {
   const httpsUrl = convertSshToHttps(repoUrl);
+  
+  // Cria versão resumida da descrição para URL (limite seguro de ~800 caracteres)
+  const shortDescription = createShortDescription(description);
 
   // Parâmetros para URL do GitHub
   const params = new URLSearchParams({
     quick_pull: '1',
     title: title,
-    body: description
+    body: shortDescription
   });
 
   return `${httpsUrl}/compare/master...${branch}?${params.toString()}`;
@@ -600,14 +632,46 @@ function generateGitLabPRUrl(
   description: string
 ): string {
   const httpsUrl = convertSshToHttps(repoUrl);
+  
+  // Cria versão resumida da descrição para URL (limite seguro de ~800 caracteres)
+  const shortDescription = createShortDescription(description);
 
   // Parâmetros para URL do GitLab
   const params = new URLSearchParams({
     'merge_request[source_branch]': branch,
     'merge_request[target_branch]': 'master',
     'merge_request[title]': title,
-    'merge_request[description]': description
+    'merge_request[description]': shortDescription
   });
 
   return `${httpsUrl}/-/merge_requests/new?${params.toString()}`;
+}
+
+function createShortDescription(fullDescription: string): string {
+  const maxLength = 800; // Limite seguro para URLs
+  
+  if (fullDescription.length <= maxLength) {
+    return fullDescription;
+  }
+  
+  // Tenta preservar a estrutura do template
+  const lines = fullDescription.split('\n');
+  let shortDesc = '';
+  let currentLength = 0;
+  
+  for (const line of lines) {
+    const lineWithNewline = line + '\n';
+    
+    // Se adicionar esta linha ainda cabe no limite
+    if (currentLength + lineWithNewline.length <= maxLength - 50) { // 50 chars de margem
+      shortDesc += lineWithNewline;
+      currentLength += lineWithNewline.length;
+    } else {
+      // Adiciona indicação de conteúdo truncado
+      shortDesc += '\n--- Descrição completa será colada manualmente ---';
+      break;
+    }
+  }
+  
+  return shortDesc.trim();
 }

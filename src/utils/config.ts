@@ -6,6 +6,7 @@ export interface GromitConfig {
   aiUrl?: string;
   apiKey?: string;
   model?: string;
+  language?: string;
 }
 
 const CONFIG_FILE_NAME = '.gromit.config';

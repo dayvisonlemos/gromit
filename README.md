@@ -105,14 +105,17 @@ gromit commit
 ```
 
 ### `gromit config`
-Gerencia configurações da IA (URL, chave da API e modelo):
+Gerencia configurações da IA (URL, chave da API, modelo e linguagem):
 - `--url <url>` - Define a URL da API da IA
 - `--key <key>` - Define a chave da API da IA
 - `--model <model>` - Define o modelo da IA (ex: gpt-4-turbo, gpt-3.5-turbo)
+- `--language <language>` - Define a linguagem dos commits (ex: pt-BR, en-US, es-UY)
 - `--show` - Mostra as configurações atuais
 - `--reset` - Remove todas as configurações
 
-**Modelo padrão:** `gpt-4.1` (usado se não configurado)
+**Padrões:**
+- **Modelo:** `gpt-4.1` (usado se não configurado)
+- **Linguagem:** `en-US` (inglês americano - usado se não configurado)
 
 Exemplos:
 ```bash
@@ -125,8 +128,14 @@ gromit config --key sk-sua-chave-da-api
 # Configurar modelo específico
 gromit config --model gpt-4-turbo
 
+# Configurar linguagem para português brasileiro
+gromit config --language pt-BR
+
+# Configurar linguagem para espanhol uruguayo
+gromit config --language es-UY
+
 # Configurar tudo de uma vez
-gromit config --url https://api.openai.com/v1/chat/completions --key sk-sua-chave --model gpt-4-turbo
+gromit config --url https://api.openai.com/v1/chat/completions --key sk-sua-chave --model gpt-4-turbo --language pt-BR
 
 # Mostrar configurações atuais
 gromit config --show

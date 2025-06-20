@@ -40,10 +40,11 @@ program
 
 program
   .command('config')
-  .description('Configura URL da IA, chave da API e modelo')
+  .description('Configura URL da IA, chave da API, modelo e linguagem')
   .option('--url <url>', 'URL da API da IA')
   .option('--key <key>', 'Chave da API da IA')
   .option('--model <model>', 'Modelo da IA (ex: gpt-4-turbo, gpt-3.5-turbo)')
+  .option('--language <language>', 'Linguagem dos commits (ex: pt-BR, en)')
   .option('--show', 'Mostrar configurações atuais')
   .option('--reset', 'Resetar todas as configurações')
   .action(async (options) => {

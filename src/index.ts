@@ -2,8 +2,8 @@
 
 import { Command } from 'commander';
 import { analyzeChanges } from './commands/analyze.js';
+import { commitChanges } from './commands/commit.js';
 import { handleConfig } from './commands/config.js';
-import { validateConfig } from './utils/config.js';
 import chalk from 'chalk';
 
 const program = new Command();
@@ -28,22 +28,14 @@ program
 
 program
   .command('commit')
-  .description('Gera uma mensagem de commit baseada nas mudanças atuais')
+  .description('Gera uma mensagem de commit via IA e faz o commit automaticamente')
   .action(async () => {
-    // Verifica se a configuração é válida antes de prosseguir
-    const configValidation = validateConfig();
-    if (!configValidation.isValid) {
-      console.error(chalk.red('❌ Configuração necessária:'));
-      console.error(chalk.yellow(configValidation.message));
-      console.log('');
-      console.log(chalk.blue('💡 Exemplos de configuração:'));
-      console.log(`${chalk.cyan('gromit config --url')} https://api.openai.com/v1/chat/completions`);
-      console.log(`${chalk.cyan('gromit config --key')} sk-sua-chave-da-api`);
-      console.log(`${chalk.cyan('gromit config --show')} ${chalk.gray('# verificar configuração atual')}`);
-      return;
+    try {
+      await commitChanges();
+    } catch (error) {
+      console.error(chalk.red('Erro ao fazer commit:'), error);
+      process.exit(1);
     }
-
-    console.log(chalk.yellow('Funcionalidade em desenvolvimento...'));
   });
 
 program

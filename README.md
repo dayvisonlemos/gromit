@@ -80,10 +80,29 @@ gromit analyze
 gromit analyze --show-prompt
 ```
 
-### `gromit commit` (em desenvolvimento)
+### `gromit commit`
 ⚠️ **Requer configuração obrigatória** (URL da IA + API Key)
 
-Gerará automaticamente uma mensagem de commit usando IA baseada nas mudanças atuais.
+Funcionalidade completa de commit automático:
+- Analisa as mudanças no repositório
+- Gera prompt otimizado para IA
+- Consulta a IA para criar mensagem de commit
+- Exibe a mensagem gerada para aprovação
+- Adiciona arquivos ao stage (`git add .`)
+- Faz o commit automaticamente
+
+```bash
+# Commit automático com IA
+gromit commit
+
+# O processo:
+# 1. 🔍 Analisa mudanças
+# 2. 🤖 Consulta IA 
+# 3. 💬 Mostra mensagem gerada
+# 4. ⏸️  Aguarda confirmação (Enter)
+# 5. ➕ Adiciona arquivos (git add .)
+# 6. 📝 Faz commit
+```
 
 ### `gromit config`
 Gerencia configurações da IA (URL e chave da API):

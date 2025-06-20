@@ -38,6 +38,8 @@ program
     }
   });
 
+
+
 program
   .command('config')
   .description('Configura URL da IA, chave da API, modelo e linguagem')

@@ -111,31 +111,4 @@ ${instructions.footer}`;
   return prompt;
 }
 
-export function generatePRPrompt(changedFiles: FileChange[], diff: string, commitMessage: string): string {
-  const prompt = `Baseado nas mudanças realizadas e na mensagem de commit, gere uma descrição de Pull Request em português:
-
-MENSAGEM DE COMMIT:
-${commitMessage}
-
-MUDANÇAS REALIZADAS:
-${changedFiles.map(file => `- ${file.file} (+${file.insertions}/-${file.deletions})`).join('\n')}
-
-DIFF DAS MUDANÇAS:
-${diff.split('\n').slice(0, 150).join('\n')}
-
-INSTRUÇÕES:
-1. Gere uma descrição clara e profissional
-2. Inclua:
-   - Resumo das mudanças
-   - Motivação/contexto
-   - Lista de alterações principais
-   - Impacto esperado (se relevante)
-
-3. Use formato markdown
-4. Seja conciso mas informativo
-5. Escreva em português
-
-Responda apenas com a descrição do PR.`;
-
-  return prompt;
-} 
+ 

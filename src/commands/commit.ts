@@ -32,6 +32,26 @@ export async function commitChanges(): Promise<void> {
       return;
     }
 
+    // Verifica se estamos em uma branch protegida
+    spinner.text = 'Verificando branch atual...';
+    const currentBranch = await git.revparse(['--abbrev-ref', 'HEAD']);
+    const protectedBranches = ['master', 'main', 'develop'];
+    
+    if (protectedBranches.includes(currentBranch.trim())) {
+      spinner.fail(`❌ Commits não são permitidos na branch '${currentBranch.trim()}'`);
+      console.log('');
+      console.log(chalk.red.bold('🚫 BRANCH PROTEGIDA DETECTADA'));
+      console.log(chalk.gray('─'.repeat(50)));
+      console.log(chalk.yellow(`Você está na branch: ${chalk.red.bold(currentBranch.trim())}`));
+      console.log('');
+      console.log(chalk.blue('💡 Para fazer commits, crie uma nova branch:'));
+      console.log(`${chalk.cyan('git checkout -b')} feature/minha-funcionalidade`);
+      console.log(`${chalk.cyan('git checkout -b')} fix/minha-correcao`);
+      console.log('');
+      console.log(chalk.gray('Branches protegidas: master, main, develop'));
+      return;
+    }
+
     // Obtém o status dos arquivos
     const status = await git.status();
     

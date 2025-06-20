@@ -83,4 +83,6 @@ export async function generateCommitMessage(prompt: string): Promise<string | nu
     console.error(chalk.yellow(response.error || 'Erro desconhecido'));
     return null;
   }
-} 
+}
+
+ 

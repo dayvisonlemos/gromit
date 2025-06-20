@@ -8,8 +8,10 @@ Ferramenta CLI para análise de mudanças git e geração de commits via IA.
 - ✅ Visualização de estatísticas de mudanças (inserções/deleções)
 - ✅ Preview das diferenças (diff)
 - ✅ Geração de prompts para IA criar mensagens de commit
-- 🚧 Integração com IA para geração automática de commits (em desenvolvimento)
-- 🚧 Geração de descrições de Pull Request (em desenvolvimento)
+- ✅ Integração com IA para geração automática de commits
+- ✅ Commit automático com mensagens geradas por IA
+- ✅ Suporte multilíngue (pt-BR, es-UY, en-US)
+- ✅ Configuração flexível de IA (URL, API Key, modelo)
 
 ## Instalação
 

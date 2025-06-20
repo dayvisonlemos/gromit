@@ -42,9 +42,27 @@ npm run dev analyze
 gromit analyze
 ```
 
+## Configuração Obrigatória
+
+⚠️ **IMPORTANTE**: Os comandos `analyze` e `commit` exigem configuração prévia da IA.
+
+Antes de usar o gromit, você deve configurar:
+1. **URL da API da IA** (ex: OpenAI, Claude, etc.)
+2. **Chave da API** (sua chave secreta)
+
+```bash
+# Configuração completa
+gromit config --url https://api.openai.com/v1/chat/completions --key sk-sua-chave
+
+# Verificar configuração
+gromit config --show
+```
+
 ## Comandos Disponíveis
 
 ### `gromit analyze`
+⚠️ **Requer configuração obrigatória** (URL da IA + API Key)
+
 Analisa as mudanças no repositório git atual e exibe:
 - Lista de arquivos modificados
 - Quantidade de linhas alteradas por arquivo
@@ -53,6 +71,8 @@ Analisa as mudanças no repositório git atual e exibe:
 - Prompt otimizado para IA gerar mensagem de commit
 
 ### `gromit commit` (em desenvolvimento)
+⚠️ **Requer configuração obrigatória** (URL da IA + API Key)
+
 Gerará automaticamente uma mensagem de commit usando IA baseada nas mudanças atuais.
 
 ### `gromit config`

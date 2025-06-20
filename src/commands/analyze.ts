@@ -2,6 +2,7 @@ import simpleGit from 'simple-git';
 import chalk from 'chalk';
 import ora from 'ora';
 import { generateCommitPrompt } from '../utils/promptGenerator.js';
+import { validateConfig } from '../utils/config.js';
 
 export interface FileChange {
   file: string;
@@ -11,6 +12,19 @@ export interface FileChange {
 }
 
 export async function analyzeChanges(): Promise<void> {
+  // Verifica se a configuração é válida antes de prosseguir
+  const configValidation = validateConfig();
+  if (!configValidation.isValid) {
+    console.error(chalk.red('❌ Configuração necessária:'));
+    console.error(chalk.yellow(configValidation.message));
+    console.log('');
+    console.log(chalk.blue('💡 Exemplos de configuração:'));
+    console.log(`${chalk.cyan('gromit config --url')} https://api.openai.com/v1/chat/completions`);
+    console.log(`${chalk.cyan('gromit config --key')} sk-sua-chave-da-api`);
+    console.log(`${chalk.cyan('gromit config --show')} ${chalk.gray('# verificar configuração atual')}`);
+    return;
+  }
+
   const spinner = ora('Analisando mudanças no repositório...').start();
   
   try {

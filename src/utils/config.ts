@@ -54,4 +54,41 @@ export function removeConfig(): void {
   } catch (error) {
     throw new Error(`Erro ao remover configuração: ${error}`);
   }
+}
+
+export function validateConfig(): { isValid: boolean; message?: string } {
+  const config = loadConfig();
+  
+  if (!hasConfig()) {
+    return {
+      isValid: false,
+      message: 'Nenhuma configuração encontrada. Use "gromit config" para configurar a IA.'
+    };
+  }
+  
+  if (!config.aiUrl) {
+    return {
+      isValid: false,
+      message: 'URL da IA não configurada. Use "gromit config --url <url>" para configurar.'
+    };
+  }
+  
+  if (!config.apiKey) {
+    return {
+      isValid: false,
+      message: 'API Key não configurada. Use "gromit config --key <key>" para configurar.'
+    };
+  }
+  
+  return { isValid: true };
+}
+
+export function requireConfig(): GromitConfig {
+  const validation = validateConfig();
+  
+  if (!validation.isValid) {
+    throw new Error(validation.message);
+  }
+  
+  return loadConfig();
 } 

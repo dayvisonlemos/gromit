@@ -11,7 +11,8 @@ interface Instructions {
 function getInstructionsByLanguage(language: string): Instructions {
   if (language === 'pt-BR') {
     return {
-      header: "Por favor, gere uma mensagem de commit concisa e descritiva baseada nas seguintes mudanças:",
+      header:
+        'Por favor, gere uma mensagem de commit concisa e descritiva baseada nas seguintes mudanças:',
       guidelines: `INSTRUÇÕES:
 1. Gere uma mensagem de commit seguindo as convenções:
    - Use o formato: tipo(escopo): descrição
@@ -26,12 +27,13 @@ function getInstructionsByLanguage(language: string): Instructions {
    - fix(api): corrige validação de entrada de dados
    - refactor(utils): simplifica função de formatação
    - docs(readme): atualiza instruções de instalação`,
-      footer: "Responda APENAS com a mensagem de commit, sem explicações adicionais."
+      footer: 'Responda APENAS com a mensagem de commit, sem explicações adicionais.'
     };
   } else if (language.startsWith('es')) {
     // Spanish (supports es, es-ES, es-UY, es-AR, etc.)
     return {
-      header: "Por favor, genera un mensaje de commit conciso y descriptivo basado en los siguientes cambios:",
+      header:
+        'Por favor, genera un mensaje de commit conciso y descriptivo basado en los siguientes cambios:',
       guidelines: `INSTRUCCIONES:
 1. Genera un mensaje de commit siguiendo las convenciones:
    - Usa el formato: tipo(alcance): descripción
@@ -46,12 +48,13 @@ function getInstructionsByLanguage(language: string): Instructions {
    - fix(api): corrige validación de datos de entrada
    - refactor(utils): simplifica función de formato
    - docs(readme): actualiza instrucciones de instalación`,
-      footer: "Responde ÚNICAMENTE con el mensaje de commit, sin explicaciones adicionales."
+      footer: 'Responde ÚNICAMENTE con el mensaje de commit, sin explicaciones adicionales.'
     };
   } else {
     // Default: English
     return {
-      header: "Please generate a concise and descriptive commit message based on the following changes:",
+      header:
+        'Please generate a concise and descriptive commit message based on the following changes:',
       guidelines: `INSTRUCTIONS:
 1. Generate a commit message following conventions:
    - Use format: type(scope): description
@@ -66,7 +69,7 @@ function getInstructionsByLanguage(language: string): Instructions {
    - fix(api): correct input data validation
    - refactor(utils): simplify format function
    - docs(readme): update installation instructions`,
-      footer: "Respond ONLY with the commit message, no additional explanations."
+      footer: 'Respond ONLY with the commit message, no additional explanations.'
     };
   }
 }
@@ -77,18 +80,18 @@ export function generateCommitPrompt(changedFiles: FileChange[], diff: string): 
   const totalFiles = changedFiles.length;
   const totalInsertions = changedFiles.reduce((sum, file) => sum + file.insertions, 0);
   const totalDeletions = changedFiles.reduce((sum, file) => sum + file.deletions, 0);
-  
+
   // Lista dos arquivos modificados
-  const filesList = changedFiles.map(file => 
-    `- ${file.file} (+${file.insertions}/-${file.deletions})`
-  ).join('\n');
-  
+  const filesList = changedFiles
+    .map(file => `- ${file.file} (+${file.insertions}/-${file.deletions})`)
+    .join('\n');
+
   // Pega um preview limitado do diff para não sobrecarregar a IA
   const diffPreview = diff.split('\n').slice(0, 100).join('\n');
-  
+
   // Define instruções baseadas na linguagem
   const instructions = getInstructionsByLanguage(language);
-  
+
   const prompt = `${instructions.header}
 
 RESUMO DAS MUDANÇAS:
@@ -110,5 +113,3 @@ ${instructions.footer}`;
 
   return prompt;
 }
-
- 

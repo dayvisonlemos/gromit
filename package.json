@@ -11,21 +11,38 @@
     "dev": "tsx src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "lint:check": "eslint src/**/*.ts --max-warnings 0",
+    "format": "prettier --write src/**/*.ts",
+    "format:check": "prettier --check src/**/*.ts",
+    "check": "npm run type-check && npm run lint:check && npm run format:check",
+    "fix": "npm run lint:fix && npm run format"
   },
-  "keywords": ["git", "commit", "ai", "cli"],
+  "keywords": [
+    "git",
+    "commit",
+    "ai",
+    "cli"
+  ],
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "@eslint/js": "^9.29.0",
     "@types/node": "^20.10.0",
+    "@typescript-eslint/eslint-plugin": "^8.34.1",
+    "@typescript-eslint/parser": "^8.34.1",
+    "eslint": "^9.29.0",
+    "prettier": "^3.5.3",
     "tsx": "^4.6.0",
     "typescript": "^5.3.0"
   },
   "dependencies": {
-    "commander": "^11.1.0",
-    "simple-git": "^3.20.0",
     "chalk": "^5.3.0",
+    "clipboardy": "^4.0.0",
+    "commander": "^11.1.0",
     "ora": "^7.0.1",
-    "clipboardy": "^4.0.0"
+    "simple-git": "^3.20.0"
   }
-} 
+}

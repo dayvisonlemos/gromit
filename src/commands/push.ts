@@ -6,7 +6,10 @@ import fs from 'fs';
 import { sendPromptToAI } from '../utils/aiClient.js';
 import { validateConfig } from '../utils/config.js';
 
-export async function pushChanges(force: boolean = false, showDiff: boolean = false): Promise<void> {
+export async function pushChanges(
+  force: boolean = false,
+  showDiff: boolean = false
+): Promise<void> {
   // Verifica se a configuração é válida antes de prosseguir
   const configValidation = validateConfig();
   if (!configValidation.isValid) {
@@ -16,14 +19,16 @@ export async function pushChanges(force: boolean = false, showDiff: boolean = fa
     console.log(chalk.blue('💡 Exemplos de configuração:'));
     console.log(`${chalk.cyan('gromit config --url')} https://api.openai.com/v1/chat/completions`);
     console.log(`${chalk.cyan('gromit config --key')} sk-sua-chave-da-api`);
-    console.log(`${chalk.cyan('gromit config --show')} ${chalk.gray('# verificar configuração atual')}`);
+    console.log(
+      `${chalk.cyan('gromit config --show')} ${chalk.gray('# verificar configuração atual')}`
+    );
     return;
   }
   const spinner = ora('Verificando estado do repositório...').start();
-  
+
   try {
     const git = simpleGit();
-    
+
     // Verifica se estamos em um repositório git
     const isRepo = await git.checkIsRepo();
     if (!isRepo) {
@@ -35,18 +40,18 @@ export async function pushChanges(force: boolean = false, showDiff: boolean = fa
     spinner.text = 'Verificando remote origin...';
     let hasRemote = true;
     let remoteBranch = '';
-    
+
     try {
       const remotes = await git.getRemotes(true);
       const origin = remotes.find(remote => remote.name === 'origin');
-      
+
       if (!origin) {
         hasRemote = false;
       } else {
         // Obtém a branch atual
         const currentBranch = await git.revparse(['--abbrev-ref', 'HEAD']);
         remoteBranch = `origin/${currentBranch.trim()}`;
-        
+
         // Verifica se a branch remota existe
         try {
           await git.revparse([remoteBranch]);
@@ -57,7 +62,7 @@ export async function pushChanges(force: boolean = false, showDiff: boolean = fa
             await git.revparse([remoteBranch]);
             hasRemote = true;
           } catch {
-            remoteBranch = 'origin/main'; // fallback para main  
+            remoteBranch = 'origin/main'; // fallback para main
             try {
               await git.revparse([remoteBranch]);
               hasRemote = true;
@@ -67,7 +72,7 @@ export async function pushChanges(force: boolean = false, showDiff: boolean = fa
           }
         }
       }
-    } catch (error) {
+    } catch (_error) {
       hasRemote = false;
     }
 
@@ -85,39 +90,49 @@ export async function pushChanges(force: boolean = false, showDiff: boolean = fa
     // Verifica se há mudanças não commitadas
     spinner.text = 'Verificando mudanças pendentes...';
     const status = await git.status();
-    
+
     if (status.files.length > 0 && !force) {
       spinner.fail('Existem mudanças não commitadas');
       console.log(chalk.red.bold('\n🚫 MUDANÇAS NÃO COMMITADAS DETECTADAS'));
       console.log(chalk.gray('─'.repeat(50)));
-      
+
       // Lista os arquivos modificados
-      status.files.forEach((file) => {
+      status.files.forEach(file => {
         const icon = getFileIcon(file.path);
         let statusIcon = '';
-        
-        if (file.index === 'M' || file.working_dir === 'M') statusIcon = '📝';
-        else if (file.index === 'A' || file.working_dir === 'A') statusIcon = '➕';
-        else if (file.index === 'D' || file.working_dir === 'D') statusIcon = '➖';
-        else if (file.index === '?' || file.working_dir === '?') statusIcon = '❓';
-        else statusIcon = '📄';
-        
+
+        if (file.index === 'M' || file.working_dir === 'M') {
+          statusIcon = '📝';
+        } else if (file.index === 'A' || file.working_dir === 'A') {
+          statusIcon = '➕';
+        } else if (file.index === 'D' || file.working_dir === 'D') {
+          statusIcon = '➖';
+        } else if (file.index === '?' || file.working_dir === '?') {
+          statusIcon = '❓';
+        } else {
+          statusIcon = '📄';
+        }
+
         console.log(`${statusIcon} ${icon} ${chalk.yellow(file.path)}`);
       });
-      
+
       console.log(chalk.blue.bold('\n💡 VOCÊ PRECISA COMMITÁ-LAS PRIMEIRO:'));
       console.log(chalk.gray('─'.repeat(50)));
       console.log(`${chalk.cyan('gromit commit')} ${chalk.gray('# commit automático com IA')}`);
-      console.log(`${chalk.cyan('git add . && git commit -m "mensagem"')} ${chalk.gray('# commit manual')}`);
+      console.log(
+        `${chalk.cyan('git add . && git commit -m "mensagem"')} ${chalk.gray('# commit manual')}`
+      );
       console.log('');
-      console.log(`${chalk.yellow('Ou use:')} ${chalk.cyan('gromit push --force')} ${chalk.gray('# para ignorar (não recomendado)')}`);
+      console.log(
+        `${chalk.yellow('Ou use:')} ${chalk.cyan('gromit push --force')} ${chalk.gray('# para ignorar (não recomendado)')}`
+      );
       return;
     }
 
     if (status.files.length > 0 && force) {
       console.log(chalk.yellow('\n⚠️  IGNORANDO MUDANÇAS NÃO COMMITADAS (--force usado)'));
       console.log(chalk.gray('─'.repeat(50)));
-      status.files.forEach((file) => {
+      status.files.forEach(file => {
         const icon = getFileIcon(file.path);
         console.log(`📄 ${icon} ${chalk.yellow(file.path)} ${chalk.gray('(ignorado)')}`);
       });
@@ -126,7 +141,7 @@ export async function pushChanges(force: boolean = false, showDiff: boolean = fa
     // Obtém commits locais que não estão no remote
     spinner.text = 'Comparando com remote...';
     const pendingCommits = await git.log([`${remoteBranch}..HEAD`]);
-    
+
     if (pendingCommits.total === 0) {
       spinner.succeed('Verificação concluída!');
       console.log(chalk.green('\n✅ NENHUM COMMIT PENDENTE PARA PUSH'));
@@ -141,15 +156,17 @@ export async function pushChanges(force: boolean = false, showDiff: boolean = fa
     // Exibe resumo dos commits pendentes
     console.log(chalk.cyan.bold(`\n📋 COMMITS PENDENTES PARA PUSH (${pendingCommits.total}):`));
     console.log(chalk.gray('─'.repeat(50)));
-    
+
     [...pendingCommits.all].reverse().forEach((commit: any, index: number) => {
       const commitNumber = index + 1;
       const shortHash = commit.hash.substring(0, 7);
       const message = commit.message.split('\n')[0]; // Primeira linha apenas
       const author = commit.author_name;
       const date = new Date(commit.date).toLocaleDateString('pt-BR');
-      
-      console.log(`${chalk.yellow(`${commitNumber}.`)} ${chalk.green(shortHash)} ${chalk.white(message)}`);
+
+      console.log(
+        `${chalk.yellow(`${commitNumber}.`)} ${chalk.green(shortHash)} ${chalk.white(message)}`
+      );
       console.log(`   ${chalk.gray(`por ${author} em ${date}`)}`);
     });
 
@@ -168,18 +185,18 @@ export async function pushChanges(force: boolean = false, showDiff: boolean = fa
     if (diffStats.files.length > 0) {
       console.log(chalk.magenta.bold('\n📁 ARQUIVOS QUE SERÃO ENVIADOS:'));
       console.log(chalk.gray('─'.repeat(50)));
-      
-      diffStats.files.slice(0, 10).forEach((file) => {
+
+      diffStats.files.slice(0, 10).forEach(file => {
         const icon = getFileIcon(file.file);
         const insertions = 'insertions' in file ? file.insertions : 0;
         const deletions = 'deletions' in file ? file.deletions : 0;
-        
+
         console.log(`${icon} ${chalk.yellow(file.file)}`);
         if (insertions > 0 || deletions > 0) {
           console.log(`   ${chalk.green(`+${insertions}`)} ${chalk.red(`-${deletions}`)} linhas`);
         }
       });
-      
+
       if (diffStats.files.length > 10) {
         console.log(chalk.gray(`... e mais ${diffStats.files.length - 10} arquivos`));
       }
@@ -189,17 +206,21 @@ export async function pushChanges(force: boolean = false, showDiff: boolean = fa
     if (showDiff) {
       console.log(chalk.cyan.bold('\n🔍 PREVIEW DAS MUDANÇAS (DIFF):'));
       console.log(chalk.gray('─'.repeat(50)));
-      
+
       try {
         const diff = await git.diff([`${remoteBranch}..HEAD`]);
         const diffLines = diff.split('\n');
         const maxLines = 50;
-        
+
         if (diffLines.length > maxLines) {
-          console.log(chalk.yellow(`⚠️  Mostrando primeiras ${maxLines} linhas do diff (total: ${diffLines.length} linhas)`));
+          console.log(
+            chalk.yellow(
+              `⚠️  Mostrando primeiras ${maxLines} linhas do diff (total: ${diffLines.length} linhas)`
+            )
+          );
           console.log('');
         }
-        
+
         const linesToShow = diffLines.slice(0, maxLines);
         linesToShow.forEach(line => {
           if (line.startsWith('+++') || line.startsWith('---')) {
@@ -216,12 +237,13 @@ export async function pushChanges(force: boolean = false, showDiff: boolean = fa
             console.log(chalk.gray(line));
           }
         });
-        
+
         if (diffLines.length > maxLines) {
-          console.log(chalk.yellow(`\n... (${diffLines.length - maxLines} linhas restantes não mostradas)`));
+          console.log(
+            chalk.yellow(`\n... (${diffLines.length - maxLines} linhas restantes não mostradas)`)
+          );
           console.log(chalk.gray(`Use: git diff ${remoteBranch}..HEAD # para ver o diff completo`));
         }
-        
       } catch (error) {
         console.log(chalk.red(`Erro ao obter diff: ${error}`));
       }
@@ -230,33 +252,40 @@ export async function pushChanges(force: boolean = false, showDiff: boolean = fa
     // Execução automática do push completo
     console.log(chalk.blue.bold('\n🚀 INICIANDO PROCESSO AUTOMÁTICO:'));
     console.log(chalk.gray('─'.repeat(50)));
-    
+
     const currentBranch = (await git.revparse(['--abbrev-ref', 'HEAD'])).trim();
-    
+
     // 1. Gerar prompt para IA
     console.log(chalk.cyan('1. 📝 Gerando prompt para IA...'));
-    const prPrompt = await generatePullRequestPrompt(git, pendingCommits, diffStats, remoteBranch, currentBranch, true);
-    
+    const prPrompt = await generatePullRequestPrompt(
+      git,
+      pendingCommits,
+      diffStats,
+      remoteBranch,
+      currentBranch,
+      true
+    );
+
     // 2. Chamar IA para gerar título e descrição
     console.log(chalk.cyan('2. 🤖 Consultando IA para criar título e descrição...'));
     const aiResponse = await sendPromptToAI(prPrompt);
-    
+
     if (!aiResponse.success) {
       console.error(chalk.red(`❌ Erro ao consultar IA: ${aiResponse.error}`));
       return;
     }
-    
+
     // Parsear resposta da IA
     const { title, description } = parsePRResponse(aiResponse.message!);
-    
+
     console.log(chalk.green('✅ Título e descrição gerados!'));
     console.log(chalk.yellow(`📋 Título: ${title}`));
     console.log(chalk.gray(`📝 Descrição: ${description.substring(0, 100)}...`));
-    
+
     // 3. Fazer push
     console.log(chalk.cyan('3. 📤 Fazendo push para o repositório...'));
     const pushSpinner = ora('Enviando commits...').start();
-    
+
     try {
       await git.push(['--set-upstream', 'origin', currentBranch]);
       pushSpinner.succeed('Push realizado com sucesso!');
@@ -264,15 +293,15 @@ export async function pushChanges(force: boolean = false, showDiff: boolean = fa
       pushSpinner.fail(`Erro ao fazer push: ${error}`);
       return;
     }
-    
+
     // 4. Gerar URL do PR
     console.log(chalk.cyan('4. 🔗 Gerando URL automática do Pull Request...'));
     const prUrl = await generatePRUrl(git, currentBranch, title, description);
-    
+
     if (prUrl) {
       // 5. Copiar para clipboard
       await clipboardy.write(prUrl);
-      
+
       console.log(chalk.green.bold('\n🎉 PROCESSO CONCLUÍDO!'));
       console.log(chalk.gray('─'.repeat(50)));
       console.log(`📤 Commits enviados: ${chalk.cyan(pendingCommits.total)}`);
@@ -282,12 +311,10 @@ export async function pushChanges(force: boolean = false, showDiff: boolean = fa
       console.log(chalk.green('🔗 URL DO PULL REQUEST COPIADA PARA O CLIPBOARD!'));
       console.log(chalk.gray('Cole a URL no navegador para criar o PR automaticamente:'));
       console.log(chalk.cyan(prUrl));
-      
     } else {
       console.log(chalk.yellow('⚠️  Não foi possível gerar URL automática do PR'));
       console.log('💡 Crie o PR manualmente no GitHub/GitLab');
     }
-    
   } catch (error) {
     spinner.fail(`Erro ao processar push: ${error}`);
     throw error;
@@ -296,37 +323,55 @@ export async function pushChanges(force: boolean = false, showDiff: boolean = fa
 
 function getFileIcon(filePath: string): string {
   const ext = filePath.split('.').pop()?.toLowerCase();
-  
+
   switch (ext) {
-    case 'ts': case 'tsx': return '🟦';
-    case 'js': case 'jsx': return '🟨';
-    case 'json': return '📋';
-    case 'md': return '📝';
-    case 'yml': case 'yaml': return '⚙️';
-    case 'css': case 'scss': case 'sass': return '🎨';
-    case 'html': return '🌐';
-    case 'py': return '🐍';
-    case 'java': return '☕';
-    case 'go': return '🐹';
-    case 'rs': return '🦀';
-    case 'php': return '🐘';
-    default: return '📄';
+    case 'ts':
+    case 'tsx':
+      return '🟦';
+    case 'js':
+    case 'jsx':
+      return '🟨';
+    case 'json':
+      return '📋';
+    case 'md':
+      return '📝';
+    case 'yml':
+    case 'yaml':
+      return '⚙️';
+    case 'css':
+    case 'scss':
+    case 'sass':
+      return '🎨';
+    case 'html':
+      return '🌐';
+    case 'py':
+      return '🐍';
+    case 'java':
+      return '☕';
+    case 'go':
+      return '🐹';
+    case 'rs':
+      return '🦀';
+    case 'php':
+      return '🐘';
+    default:
+      return '📄';
   }
 }
 
 async function generatePullRequestPrompt(
-  git: any, 
-  pendingCommits: any, 
-  diffStats: any, 
-  remoteBranch: string, 
-  currentBranch: string, 
+  git: any,
+  pendingCommits: any,
+  diffStats: any,
+  remoteBranch: string,
+  currentBranch: string,
   includeDiff: boolean = false
 ): Promise<string> {
   try {
     // Lê o template de PR se existir
     let template = '';
     const templatePath = '.github/pull_request_template.md';
-    
+
     if (fs.existsSync(templatePath)) {
       template = fs.readFileSync(templatePath, 'utf8');
     } else {
@@ -342,20 +387,25 @@ async function generatePullRequestPrompt(
     }
 
     // Constrói informações dos commits
-    const commitsList = [...pendingCommits.all].reverse().map((commit: any, index: number) => {
-      const shortHash = commit.hash.substring(0, 7);
-      const message = commit.message.split('\n')[0];
-      const author = commit.author_name;
-      const date = new Date(commit.date).toLocaleDateString('pt-BR');
-      return `${index + 1}. ${shortHash} - ${message} (por ${author} em ${date})`;
-    }).join('\n');
+    const commitsList = [...pendingCommits.all]
+      .reverse()
+      .map((commit: any, index: number) => {
+        const shortHash = commit.hash.substring(0, 7);
+        const message = commit.message.split('\n')[0];
+        const author = commit.author_name;
+        const date = new Date(commit.date).toLocaleDateString('pt-BR');
+        return `${index + 1}. ${shortHash} - ${message} (por ${author} em ${date})`;
+      })
+      .join('\n');
 
     // Constrói lista de arquivos modificados
-    const filesList = diffStats.files.map((file: any) => {
-      const insertions = 'insertions' in file ? file.insertions : 0;
-      const deletions = 'deletions' in file ? file.deletions : 0;
-      return `- ${file.file} (+${insertions} -${deletions} linhas)`;
-    }).join('\n');
+    const filesList = diffStats.files
+      .map((file: any) => {
+        const insertions = 'insertions' in file ? file.insertions : 0;
+        const deletions = 'deletions' in file ? file.deletions : 0;
+        return `- ${file.file} (+${insertions} -${deletions} linhas)`;
+      })
+      .join('\n');
 
     // Obtém diff se solicitado
     let diffContent = '';
@@ -364,14 +414,15 @@ async function generatePullRequestPrompt(
         const diff = await git.diff([`${remoteBranch}..HEAD`]);
         const diffLines = diff.split('\n');
         const maxLines = 100; // Mais linhas para o contexto da IA
-        
+
         if (diffLines.length > maxLines) {
-          diffContent = diffLines.slice(0, maxLines).join('\n') + 
+          diffContent =
+            diffLines.slice(0, maxLines).join('\n') +
             `\n... (${diffLines.length - maxLines} linhas restantes omitidas)`;
         } else {
           diffContent = diff;
         }
-      } catch (error) {
+      } catch (_error) {
         diffContent = 'Erro ao obter diff detalhado.';
       }
     }
@@ -393,12 +444,16 @@ ${commitsList}
 **ARQUIVOS MODIFICADOS:**
 ${filesList}
 
-${includeDiff && diffContent ? `**DIFERENÇAS (DIFF):**
+${
+  includeDiff && diffContent
+    ? `**DIFERENÇAS (DIFF):**
 \`\`\`diff
 ${diffContent}
 \`\`\`
 
-` : ''}**TEMPLATE DO PULL REQUEST:**
+`
+    : ''
+}**TEMPLATE DO PULL REQUEST:**
 ${template}
 
 **INSTRUÇÕES:**
@@ -416,7 +471,6 @@ Descrição:
 [sua descrição aqui seguindo o template]`;
 
     return prompt;
-    
   } catch (error) {
     throw new Error(`Erro ao gerar prompt do PR: ${error}`);
   }
@@ -429,34 +483,38 @@ function parsePRResponse(aiResponse: string): { title: string; description: stri
     let title = '';
     let description = '';
     let isDescription = false;
-    
+
     for (const line of lines) {
       if (line.toLowerCase().startsWith('título:') || line.toLowerCase().startsWith('title:')) {
         title = line.replace(/^(título|title):\s*/i, '').trim();
-      } else if (line.toLowerCase().startsWith('descrição:') || line.toLowerCase().startsWith('description:')) {
+      } else if (
+        line.toLowerCase().startsWith('descrição:') ||
+        line.toLowerCase().startsWith('description:')
+      ) {
         isDescription = true;
         const desc = line.replace(/^(descrição|description):\s*/i, '').trim();
-        if (desc) description += desc + '\n';
+        if (desc) {
+          description += desc + '\n';
+        }
       } else if (isDescription && line.trim()) {
         description += line + '\n';
       }
     }
-    
+
     // Fallbacks se não conseguir parsear
     if (!title) {
       title = aiResponse.split('\n')[0].substring(0, 60);
     }
-    
+
     if (!description) {
       description = aiResponse;
     }
-    
+
     return {
       title: title.trim(),
       description: description.trim()
     };
-    
-  } catch (error) {
+  } catch (_error) {
     // Fallback em caso de erro
     return {
       title: aiResponse.substring(0, 60),
@@ -465,27 +523,31 @@ function parsePRResponse(aiResponse: string): { title: string; description: stri
   }
 }
 
-async function generatePRUrl(git: any, branch: string, title: string, description: string): Promise<string | null> {
+async function generatePRUrl(
+  git: any,
+  branch: string,
+  title: string,
+  description: string
+): Promise<string | null> {
   try {
     // Obtém a URL do remote origin
     const remotes = await git.getRemotes(true);
     const origin = remotes.find((remote: any) => remote.name === 'origin');
-    
+
     if (!origin || !origin.refs || !origin.refs.push) {
       return null;
     }
-    
+
     const repoUrl = origin.refs.push;
-    
+
     // Detecta se é GitHub ou GitLab
     if (repoUrl.includes('github.com')) {
       return generateGitHubPRUrl(repoUrl, branch, title, description);
     } else if (repoUrl.includes('gitlab.com') || repoUrl.includes('gitlab')) {
       return generateGitLabPRUrl(repoUrl, branch, title, description);
     }
-    
+
     return null;
-    
   } catch (error) {
     console.error(chalk.red(`Erro ao gerar URL do PR: ${error}`));
     return null;
@@ -496,39 +558,49 @@ function convertSshToHttps(repoUrl: string): string {
   // Converte SSH para HTTPS de forma genérica
   // Padrão SSH: git@hostname:user/repo.git
   // Padrão HTTPS: https://hostname/user/repo
-  
+
   if (repoUrl.startsWith('git@')) {
     // Extrai hostname e path do formato SSH
     const sshPattern = /^git@([^:]+):(.+)$/;
     const match = repoUrl.match(sshPattern);
-    
+
     if (match) {
       const hostname = match[1];
       const path = match[2].replace('.git', '');
       return `https://${hostname}/${path}`;
     }
   }
-  
+
   // Se já é HTTPS ou outro formato, apenas remove .git se existir
   return repoUrl.replace('.git', '');
 }
 
-function generateGitHubPRUrl(repoUrl: string, branch: string, title: string, description: string): string {
+function generateGitHubPRUrl(
+  repoUrl: string,
+  branch: string,
+  title: string,
+  description: string
+): string {
   const httpsUrl = convertSshToHttps(repoUrl);
-  
+
   // Parâmetros para URL do GitHub
   const params = new URLSearchParams({
-    'quick_pull': '1',
-    'title': title,
-    'body': description
+    quick_pull: '1',
+    title: title,
+    body: description
   });
-  
+
   return `${httpsUrl}/compare/master...${branch}?${params.toString()}`;
 }
 
-function generateGitLabPRUrl(repoUrl: string, branch: string, title: string, description: string): string {
+function generateGitLabPRUrl(
+  repoUrl: string,
+  branch: string,
+  title: string,
+  description: string
+): string {
   const httpsUrl = convertSshToHttps(repoUrl);
-  
+
   // Parâmetros para URL do GitLab
   const params = new URLSearchParams({
     'merge_request[source_branch]': branch,
@@ -536,8 +608,6 @@ function generateGitLabPRUrl(repoUrl: string, branch: string, title: string, des
     'merge_request[title]': title,
     'merge_request[description]': description
   });
-  
+
   return `${httpsUrl}/-/merge_requests/new?${params.toString()}`;
 }
-
- 

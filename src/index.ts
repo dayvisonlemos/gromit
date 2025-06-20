@@ -55,13 +55,13 @@ program
 
 program
   .command('push')
-  .description('Verifica mudanças pendentes e faz push para o repositório remoto')
-  .option('--force', 'Força o push mesmo com mudanças não commitadas')
+  .description('Mostra mudanças pendentes que ainda não foram enviadas ao repositório remoto')
+  .option('--force', 'Mostra mesmo com mudanças não commitadas')
   .action(async (options) => {
     try {
       await pushChanges(options.force);
     } catch (error) {
-      console.error(chalk.red('Erro ao fazer push:'), error);
+      console.error(chalk.red('Erro ao verificar mudanças:'), error);
       process.exit(1);
     }
   });

@@ -169,36 +169,16 @@ export async function pushChanges(force: boolean = false): Promise<void> {
       }
     }
 
-    // Pergunta confirmação
-    console.log(chalk.yellow.bold('\n⚠️  CONFIRMAR PUSH:'));
+    // Instruções para próximos passos
+    console.log(chalk.blue.bold('\n🚀 PRÓXIMOS PASSOS:'));
     console.log(chalk.gray('─'.repeat(50)));
-    console.log(chalk.white(`Enviar ${pendingCommits.total} commit(s) para ${remoteBranch}?`));
-    console.log(chalk.yellow('Pressione Enter para continuar ou Ctrl+C para cancelar...'));
-
-    // Faz o push
-    const pushSpinner = ora('Enviando commits para o repositório remoto...').start();
-    try {
-      await git.push();
-      pushSpinner.succeed('Push realizado com sucesso!');
-      
-      console.log(chalk.green.bold('\n🎉 PUSH CONCLUÍDO!'));
-      console.log(chalk.gray('─'.repeat(50)));
-      console.log(`📤 Commits enviados: ${chalk.cyan(pendingCommits.total)}`);
-      console.log(`📂 Arquivos modificados: ${chalk.yellow(diffStats.files.length)}`);
-      console.log(`📈 Linhas alteradas: ${chalk.cyan(diffStats.changed)}`);
-      console.log(`🌐 Remote: ${chalk.blue(remoteBranch)}`);
-      
-    } catch (error) {
-      pushSpinner.fail(`Erro ao fazer push: ${error}`);
-      
-      console.log(chalk.red.bold('\n❌ ERRO NO PUSH'));
-      console.log(chalk.gray('─'.repeat(50)));
-      console.log(chalk.yellow('💡 Possíveis soluções:'));
-      console.log(`${chalk.cyan('git pull')} ${chalk.gray('# sincronizar com remote primeiro')}`);
-      console.log(`${chalk.cyan('git push -f')} ${chalk.gray('# força push (cuidado!)')}`);
-      console.log(`${chalk.cyan('git status')} ${chalk.gray('# verificar estado do repositório')}`);
-      return;
-    }
+    console.log(chalk.white('Para enviar estes commits ao repositório remoto:'));
+    console.log('');
+    console.log(`${chalk.cyan('git push')} ${chalk.gray('# push padrão')}`);
+    console.log(`${chalk.cyan('git push origin ' + (await git.revparse(['--abbrev-ref', 'HEAD'])).trim())} ${chalk.gray('# push da branch atual')}`);
+    console.log(`${chalk.cyan('git push --set-upstream origin ' + (await git.revparse(['--abbrev-ref', 'HEAD'])).trim())} ${chalk.gray('# primeira vez desta branch')}`);
+    console.log('');
+    console.log(chalk.yellow('💡 Use o comando que melhor se adequa à sua situação!'))
     
   } catch (error) {
     spinner.fail(`Erro ao processar push: ${error}`);

@@ -1,8 +1,11 @@
 import simpleGit from 'simple-git';
 import chalk from 'chalk';
 import ora from 'ora';
+import clipboardy from 'clipboardy';
+import fs from 'fs';
+import path from 'path';
 
-export async function pushChanges(force: boolean = false, showDiff: boolean = false): Promise<void> {
+export async function pushChanges(force: boolean = false, showDiff: boolean = false, generatePr: boolean = false): Promise<void> {
   const spinner = ora('Verificando estado do repositório...').start();
   
   try {
@@ -221,6 +224,34 @@ export async function pushChanges(force: boolean = false, showDiff: boolean = fa
     console.log(`${chalk.cyan('git push --set-upstream origin ' + (await git.revparse(['--abbrev-ref', 'HEAD'])).trim())} ${chalk.gray('# primeira vez desta branch')}`);
     console.log('');
     console.log(chalk.yellow('💡 Use o comando que melhor se adequa à sua situação!'))
+
+    // Gera prompt para PR se solicitado
+    if (generatePr) {
+      console.log(chalk.green.bold('\n📝 PROMPT PARA PULL REQUEST:'));
+      console.log(chalk.gray('─'.repeat(50)));
+      
+      try {
+        const currentBranch = (await git.revparse(['--abbrev-ref', 'HEAD'])).trim();
+        
+        // Gera prompt baseado nas mudanças
+        const prPrompt = await generatePullRequestPrompt(git, pendingCommits, diffStats, remoteBranch, currentBranch, showDiff);
+        
+        // Copia para clipboard
+        await clipboardy.write(prPrompt);
+        
+        console.log(chalk.green('✅ Prompt copiado para o clipboard!'));
+        console.log('');
+        console.log(chalk.cyan('🎯 INSTRUÇÕES:'));
+        console.log('1. Cole este prompt na sua IA preferida (ChatGPT, Claude, etc.)');
+        console.log('2. A IA gerará o título e descrição do PR');
+        console.log('3. Use o resultado ao criar o Pull Request no GitHub/GitLab');
+        console.log('');
+        console.log(chalk.yellow('💡 O prompt foi copiado automaticamente para o clipboard!'));
+        
+      } catch (error) {
+        console.log(chalk.red(`Erro ao gerar prompt do PR: ${error}`));
+      }
+    }
     
   } catch (error) {
     spinner.fail(`Erro ao processar push: ${error}`);
@@ -245,5 +276,113 @@ function getFileIcon(filePath: string): string {
     case 'rs': return '🦀';
     case 'php': return '🐘';
     default: return '📄';
+  }
+}
+
+async function generatePullRequestPrompt(
+  git: any, 
+  pendingCommits: any, 
+  diffStats: any, 
+  remoteBranch: string, 
+  currentBranch: string, 
+  includeDiff: boolean = false
+): Promise<string> {
+  try {
+    // Lê o template de PR se existir
+    let template = '';
+    const templatePath = '.github/pull_request_template.md';
+    
+    if (fs.existsSync(templatePath)) {
+      template = fs.readFileSync(templatePath, 'utf8');
+    } else {
+      // Template padrão se não existir
+      template = `#### Cenário
+- Faça uma breve descrição sobre o cenário no qual é aplicado o contexto.
+
+#### Problema
+- Faça uma breve explanação sobre o que a sua alteração está resolvendo.
+
+#### Solução
+- Escreva o que foi feito para resolver o problema descrito acima.`;
+    }
+
+    // Constrói informações dos commits
+    const commitsList = [...pendingCommits.all].reverse().map((commit: any, index: number) => {
+      const shortHash = commit.hash.substring(0, 7);
+      const message = commit.message.split('\n')[0];
+      const author = commit.author_name;
+      const date = new Date(commit.date).toLocaleDateString('pt-BR');
+      return `${index + 1}. ${shortHash} - ${message} (por ${author} em ${date})`;
+    }).join('\n');
+
+    // Constrói lista de arquivos modificados
+    const filesList = diffStats.files.map((file: any) => {
+      const insertions = 'insertions' in file ? file.insertions : 0;
+      const deletions = 'deletions' in file ? file.deletions : 0;
+      return `- ${file.file} (+${insertions} -${deletions} linhas)`;
+    }).join('\n');
+
+    // Obtém diff se solicitado
+    let diffContent = '';
+    if (includeDiff) {
+      try {
+        const diff = await git.diff([`${remoteBranch}..HEAD`]);
+        const diffLines = diff.split('\n');
+        const maxLines = 100; // Mais linhas para o contexto da IA
+        
+        if (diffLines.length > maxLines) {
+          diffContent = diffLines.slice(0, maxLines).join('\n') + 
+            `\n... (${diffLines.length - maxLines} linhas restantes omitidas)`;
+        } else {
+          diffContent = diff;
+        }
+      } catch (error) {
+        diffContent = 'Erro ao obter diff detalhado.';
+      }
+    }
+
+    // Monta o prompt
+    const prompt = `Atue como especialista em desenvolvimento de software. Com base nas informações abaixo sobre mudanças em um repositório git, crie um título conciso e uma descrição detalhada para um Pull Request seguindo o template fornecido.
+
+**INFORMAÇÕES DO PULL REQUEST:**
+- Branch atual: ${currentBranch}
+- Branch de destino: ${remoteBranch.replace('origin/', '')}
+- Total de commits: ${pendingCommits.total}
+- Arquivos modificados: ${diffStats.files.length}
+- Linhas adicionadas: ${diffStats.insertions}
+- Linhas removidas: ${diffStats.deletions}
+
+**COMMITS INCLUÍDOS:**
+${commitsList}
+
+**ARQUIVOS MODIFICADOS:**
+${filesList}
+
+${includeDiff && diffContent ? `**DIFERENÇAS (DIFF):**
+\`\`\`diff
+${diffContent}
+\`\`\`
+
+` : ''}**TEMPLATE DO PULL REQUEST:**
+${template}
+
+**INSTRUÇÕES:**
+1. Crie um título conciso e descritivo para o PR (máximo 60 caracteres)
+2. Preencha a descrição seguindo exatamente a estrutura do template fornecido
+3. Base-se nas informações dos commits e arquivos modificados
+4. Use linguagem clara e objetiva
+5. Foque no valor de negócio e no impacto da mudança
+6. Responda em português brasileiro
+
+**FORMATO DA RESPOSTA:**
+Título: [seu título aqui]
+
+Descrição:
+[sua descrição aqui seguindo o template]`;
+
+    return prompt;
+    
+  } catch (error) {
+    throw new Error(`Erro ao gerar prompt do PR: ${error}`);
   }
 } 

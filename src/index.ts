@@ -58,9 +58,10 @@ program
   .description('Mostra mudanças pendentes que ainda não foram enviadas ao repositório remoto')
   .option('--force', 'Mostra mesmo com mudanças não commitadas')
   .option('--show-diff', 'Exibe o preview detalhado das mudanças (diff)')
+  .option('--generate-pr', 'Gera prompt para IA criar título e descrição do Pull Request')
   .action(async (options) => {
     try {
-      await pushChanges(options.force, options.showDiff);
+      await pushChanges(options.force, options.showDiff, options.generatePr);
     } catch (error) {
       console.error(chalk.red('Erro ao verificar mudanças:'), error);
       process.exit(1);

@@ -167,6 +167,7 @@ Mostra mudanças pendentes que ainda não foram enviadas ao repositório remoto:
 - Exibe arquivos que serão enviados com estatísticas
 - **Fornece comandos git prontos** para fazer o push
 - **Preview de diff detalhado** (opcional com --show-diff)
+- **Geração de prompt para PR** (opcional com --generate-pr)
 - Orientações claras para próximos passos
 
 **🔍 Informações Exibidas:**
@@ -185,6 +186,8 @@ Mostra mudanças pendentes que ainda não foram enviadas ao repositório remoto:
 - **Apenas visualização** - Não faz push automático
 - Mostra exatamente o que será enviado
 - Sugere comandos git específicos para sua situação
+- **Gera prompt inteligente para IA** criar título e descrição do PR
+- Usa template existente do projeto (CENÁRIO, PROBLEMA, SOLUÇÃO)
 - Funciona sem configuração de IA
 
 ```bash
@@ -197,8 +200,11 @@ gromit push --force
 # Mostrar diff detalhado das mudanças
 gromit push --show-diff
 
-# Combinar opções
-gromit push --force --show-diff
+# Gerar prompt para IA criar título e descrição do PR
+gromit push --generate-pr
+
+# Combinar todas as opções
+gromit push --force --show-diff --generate-pr
 
 # Exemplo de saída:
 # 🚫 MUDANÇAS NÃO COMMITADAS DETECTADAS
@@ -229,6 +235,15 @@ gromit push --force --show-diff
 # ──────────────────────────────────────────────────
 # git push # push padrão
 # git push origin feature/auth # push da branch atual
+#
+# 📝 PROMPT PARA PULL REQUEST: (com --generate-pr)
+# ──────────────────────────────────────────────────
+# ✅ Prompt copiado para o clipboard!
+# 
+# 🎯 INSTRUÇÕES:
+# 1. Cole este prompt na sua IA preferida (ChatGPT, Claude, etc.)
+# 2. A IA gerará o título e descrição do PR
+# 3. Use o resultado ao criar o Pull Request no GitHub/GitLab
 ```
 
 ### `gromit config`

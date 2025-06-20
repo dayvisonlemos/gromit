@@ -2,7 +2,7 @@ import simpleGit from 'simple-git';
 import chalk from 'chalk';
 import ora from 'ora';
 
-export async function pushChanges(force: boolean = false): Promise<void> {
+export async function pushChanges(force: boolean = false, showDiff: boolean = false): Promise<void> {
   const spinner = ora('Verificando estado do repositório...').start();
   
   try {
@@ -166,6 +166,48 @@ export async function pushChanges(force: boolean = false): Promise<void> {
       
       if (diffStats.files.length > 10) {
         console.log(chalk.gray(`... e mais ${diffStats.files.length - 10} arquivos`));
+      }
+    }
+
+    // Mostra diff detalhado se solicitado
+    if (showDiff) {
+      console.log(chalk.cyan.bold('\n🔍 PREVIEW DAS MUDANÇAS (DIFF):'));
+      console.log(chalk.gray('─'.repeat(50)));
+      
+      try {
+        const diff = await git.diff([`${remoteBranch}..HEAD`]);
+        const diffLines = diff.split('\n');
+        const maxLines = 50;
+        
+        if (diffLines.length > maxLines) {
+          console.log(chalk.yellow(`⚠️  Mostrando primeiras ${maxLines} linhas do diff (total: ${diffLines.length} linhas)`));
+          console.log('');
+        }
+        
+        const linesToShow = diffLines.slice(0, maxLines);
+        linesToShow.forEach(line => {
+          if (line.startsWith('+++') || line.startsWith('---')) {
+            console.log(chalk.cyan(line));
+          } else if (line.startsWith('@@')) {
+            console.log(chalk.magenta(line));
+          } else if (line.startsWith('+')) {
+            console.log(chalk.green(line));
+          } else if (line.startsWith('-')) {
+            console.log(chalk.red(line));
+          } else if (line.startsWith('diff --git')) {
+            console.log(chalk.yellow.bold(line));
+          } else {
+            console.log(chalk.gray(line));
+          }
+        });
+        
+        if (diffLines.length > maxLines) {
+          console.log(chalk.yellow(`\n... (${diffLines.length - maxLines} linhas restantes não mostradas)`));
+          console.log(chalk.gray(`Use: git diff ${remoteBranch}..HEAD # para ver o diff completo`));
+        }
+        
+      } catch (error) {
+        console.log(chalk.red(`Erro ao obter diff: ${error}`));
       }
     }
 

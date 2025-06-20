@@ -166,6 +166,7 @@ Mostra mudanças pendentes que ainda não foram enviadas ao repositório remoto:
 - Mostra resumo detalhado das mudanças
 - Exibe arquivos que serão enviados com estatísticas
 - **Fornece comandos git prontos** para fazer o push
+- **Preview de diff detalhado** (opcional com --show-diff)
 - Orientações claras para próximos passos
 
 **🔍 Informações Exibidas:**
@@ -193,6 +194,12 @@ gromit push
 # Mostrar mesmo com mudanças não commitadas
 gromit push --force
 
+# Mostrar diff detalhado das mudanças
+gromit push --show-diff
+
+# Combinar opções
+gromit push --force --show-diff
+
 # Exemplo de saída:
 # 🚫 MUDANÇAS NÃO COMMITADAS DETECTADAS
 # ──────────────────────────────────────────────────
@@ -209,6 +216,15 @@ gromit push --force
 # 1. abc123d feat(auth): adiciona autenticação JWT
 #    por João Silva em 20/06/2025
 # 
+# 🔍 PREVIEW DAS MUDANÇAS (DIFF): (com --show-diff)
+# ──────────────────────────────────────────────────
+# diff --git a/src/auth.ts b/src/auth.ts
+# +++ b/src/auth.ts
+# @@ -1,3 +1,8 @@
+# +export function authenticate(token: string) {
+# +  return validateJWT(token);
+# +}
+#
 # 🚀 PRÓXIMOS PASSOS:
 # ──────────────────────────────────────────────────
 # git push # push padrão

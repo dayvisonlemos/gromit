@@ -221,7 +221,9 @@ gromit review --show-diff
 - **IA integrada** - Título e descrição contextualizados
 - **Multi-plataforma** - Suporte a GitHub e GitLab
 - **Template personalizado** - Usa template do projeto (CENÁRIO, PROBLEMA, SOLUÇÃO)
-- **URL automática** - Link direto para criar PR no navegador
+- **Abertura automática** - Abre navegador automaticamente no PR
+- **Copy inteligente** - URL (normal) ou descrição completa (longa) no clipboard
+- **Limite de URL** - Detecta e resolve automaticamente descrições muito longas
 
 ```bash
 # Push completo com geração automática de PR
@@ -253,15 +255,23 @@ gromit push --force --show-diff
 # 📤 Commits enviados: 3
 # 📂 Arquivos modificados: 5
 # 🌐 Remote: origin/master
-# 
-# 🔗 URL DO PULL REQUEST COPIADA PARA O CLIPBOARD!
-# Cole a URL no navegador para criar o PR automaticamente:
-# https://github.com/user/repo/compare/master...feature/auth?quick_pull=1&title=...
 #
-# Se a descrição for muito longa (>800 caracteres):
-# ⚠️  DESCRIÇÃO TRUNCADA NA URL
-# 1. Abra a URL no navegador (título e parte da descrição preenchidos)
-# 2. Cole a descrição completa mostrada no terminal
+# CASO 1 - Descrição normal (<800 caracteres):
+# 🔗 URL DO PULL REQUEST COPIADA PARA O CLIPBOARD!
+# 🌐 Abrindo navegador automaticamente...
+# 💡 PROCESSO TOTALMENTE AUTOMÁTICO:
+# ✅ 1. Navegador aberto com PR completamente preenchido
+# ✅ 2. URL também está no clipboard como backup
+# 👆 3. Apenas revise e clique em "Create Pull Request"
+#
+# CASO 2 - Descrição longa (>800 caracteres):
+# ⚠️  DESCRIÇÃO MUITO LONGA PARA URL
+# 📋 DESCRIÇÃO COMPLETA COPIADA PARA O CLIPBOARD!
+# 🌐 Abrindo navegador com PR pré-preenchido...
+# 💡 PRÓXIMOS PASSOS AUTOMÁTICOS:
+# ✅ 1. Navegador aberto com título e parte da descrição preenchidos
+# ✅ 2. Descrição completa já está no seu clipboard
+# 👆 3. Cole a descrição (Ctrl+V / Cmd+V) no campo "Descrição" do PR
 #
 # 💡 Para apenas análise: gromit analyze --push
 ```

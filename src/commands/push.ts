@@ -3,6 +3,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import clipboardy from 'clipboardy';
 import fs from 'fs';
+import open from 'open';
 import { sendPromptToAI } from '../utils/aiClient.js';
 import { validateConfig } from '../utils/config.js';
 
@@ -299,36 +300,57 @@ export async function pushChanges(
     const { url: prUrl, wasDescriptionTruncated } = await generatePRUrl(git, currentBranch, title, description);
 
     if (prUrl) {
-      // 5. Copiar para clipboard
-      await clipboardy.write(prUrl);
-
       console.log(chalk.green.bold('\n🎉 PROCESSO CONCLUÍDO!'));
       console.log(chalk.gray('─'.repeat(50)));
       console.log(`📤 Commits enviados: ${chalk.cyan(pendingCommits.total)}`);
       console.log(`📂 Arquivos modificados: ${chalk.yellow(diffStats.files.length)}`);
       console.log(`🌐 Remote: ${chalk.blue(remoteBranch)}`);
       console.log('');
-      console.log(chalk.green('🔗 URL DO PULL REQUEST COPIADA PARA O CLIPBOARD!'));
-      console.log(chalk.gray('Cole a URL no navegador para criar o PR automaticamente:'));
-      console.log(chalk.cyan(prUrl));
-      
-      // Avisa se a descrição foi truncada
+
       if (wasDescriptionTruncated) {
+        // Caso com truncamento: copia descrição completa + abre navegador
+        console.log(chalk.yellow('⚠️  DESCRIÇÃO MUITO LONGA PARA URL'));
+        console.log(chalk.gray('─'.repeat(50)));
+        
+        // 5a. Copiar descrição completa para clipboard
+        await clipboardy.write(description);
+        console.log(chalk.green('📋 DESCRIÇÃO COMPLETA COPIADA PARA O CLIPBOARD!'));
+        
+        // 5b. Abrir navegador com URL resumida
+        console.log(chalk.cyan('🌐 Abrindo navegador com PR pré-preenchido...'));
+        await open(prUrl);
+        
         console.log('');
-        console.log(chalk.yellow('⚠️  DESCRIÇÃO TRUNCADA NA URL'));
-        console.log(chalk.gray('A descrição completa foi truncada para caber na URL.'));
-        console.log(chalk.blue('💡 PRÓXIMOS PASSOS:'));
-        console.log('1. Abra a URL no navegador (título e parte da descrição já estarão preenchidos)');
-        console.log('2. Cole a descrição completa abaixo no campo de descrição:');
+        console.log(chalk.blue('💡 PRÓXIMOS PASSOS AUTOMÁTICOS:'));
+        console.log('✅ 1. Navegador aberto com título e parte da descrição preenchidos');
+        console.log('✅ 2. Descrição completa já está no seu clipboard');
+        console.log(chalk.yellow('👆 3. Cole a descrição (Ctrl+V / Cmd+V) no campo "Descrição" do PR'));
+        
         console.log('');
-        console.log(chalk.cyan('--- DESCRIÇÃO COMPLETA PARA COLAR ---'));
+        console.log(chalk.cyan('--- DESCRIÇÃO QUE ESTÁ NO CLIPBOARD ---'));
         console.log(description);
         console.log(chalk.cyan('--- FIM DA DESCRIÇÃO ---'));
         
-        // Também copia a descrição completa para um segundo clipboard se disponível
+      } else {
+        // Caso normal: copia URL + abre navegador
+        // 5a. Copiar URL para clipboard
+        await clipboardy.write(prUrl);
+        console.log(chalk.green('🔗 URL DO PULL REQUEST COPIADA PARA O CLIPBOARD!'));
+        
+        // 5b. Abrir navegador automaticamente
+        console.log(chalk.cyan('🌐 Abrindo navegador automaticamente...'));
+        await open(prUrl);
+        
         console.log('');
-        console.log(chalk.yellow('💡 A descrição completa também está disponível para copiar acima.'));
+        console.log(chalk.blue('💡 PROCESSO TOTALMENTE AUTOMÁTICO:'));
+        console.log('✅ 1. Navegador aberto com PR completamente preenchido');
+        console.log('✅ 2. URL também está no clipboard como backup');
+        console.log(chalk.yellow('👆 3. Apenas revise e clique em "Create Pull Request"'));
       }
+      
+      console.log('');
+      console.log(chalk.gray('URL do PR: ') + chalk.cyan(prUrl));
+      
     } else {
       console.log(chalk.yellow('⚠️  Não foi possível gerar URL automática do PR'));
       console.log('💡 Crie o PR manualmente no GitHub/GitLab');
@@ -338,6 +360,11 @@ export async function pushChanges(
       console.log('');
       console.log(chalk.blue('📝 DESCRIÇÃO:'));
       console.log(description);
+      
+      // Copia pelo menos a descrição para facilitar
+      await clipboardy.write(`${title}\n\n${description}`);
+      console.log('');
+      console.log(chalk.green('📋 Título e descrição copiados para o clipboard!'));
     }
   } catch (error) {
     spinner.fail(`Erro ao processar push: ${error}`);

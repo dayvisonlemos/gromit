@@ -66,14 +66,14 @@ program
 
 program
   .command('push')
-  .description('Mostra mudanças pendentes que ainda não foram enviadas ao repositório remoto')
-  .option('--force', 'Mostra mesmo com mudanças não commitadas')
+  .description('Push completo com geração automática de Pull Request via IA')
+  .option('--force', 'Ignora mudanças não commitadas e prossegue')
   .option('--show-diff', 'Exibe o preview detalhado das mudanças (diff)')
   .action(async (options) => {
     try {
       await pushChanges(options.force, options.showDiff);
     } catch (error) {
-      console.error(chalk.red('Erro ao verificar mudanças:'), error);
+      console.error(chalk.red('Erro ao fazer push:'), error);
       process.exit(1);
     }
   });

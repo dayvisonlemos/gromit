@@ -1,8 +1,24 @@
 import simpleGit from 'simple-git';
 import chalk from 'chalk';
 import ora from 'ora';
+import clipboardy from 'clipboardy';
+import fs from 'fs';
+import { sendPromptToAI } from '../utils/aiClient.js';
+import { validateConfig } from '../utils/config.js';
 
 export async function pushChanges(force: boolean = false, showDiff: boolean = false): Promise<void> {
+  // Verifica se a configuração é válida antes de prosseguir
+  const configValidation = validateConfig();
+  if (!configValidation.isValid) {
+    console.error(chalk.red('❌ Configuração necessária:'));
+    console.error(chalk.yellow(configValidation.message));
+    console.log('');
+    console.log(chalk.blue('💡 Exemplos de configuração:'));
+    console.log(`${chalk.cyan('gromit config --url')} https://api.openai.com/v1/chat/completions`);
+    console.log(`${chalk.cyan('gromit config --key')} sk-sua-chave-da-api`);
+    console.log(`${chalk.cyan('gromit config --show')} ${chalk.gray('# verificar configuração atual')}`);
+    return;
+  }
   const spinner = ora('Verificando estado do repositório...').start();
   
   try {
@@ -211,16 +227,66 @@ export async function pushChanges(force: boolean = false, showDiff: boolean = fa
       }
     }
 
-    // Instruções para próximos passos
-    console.log(chalk.blue.bold('\n🚀 PRÓXIMOS PASSOS:'));
+    // Execução automática do push completo
+    console.log(chalk.blue.bold('\n🚀 INICIANDO PROCESSO AUTOMÁTICO:'));
     console.log(chalk.gray('─'.repeat(50)));
-    console.log(chalk.white('Para enviar estes commits ao repositório remoto:'));
-    console.log('');
-    console.log(`${chalk.cyan('git push')} ${chalk.gray('# push padrão')}`);
-    console.log(`${chalk.cyan('git push origin ' + (await git.revparse(['--abbrev-ref', 'HEAD'])).trim())} ${chalk.gray('# push da branch atual')}`);
-    console.log(`${chalk.cyan('git push --set-upstream origin ' + (await git.revparse(['--abbrev-ref', 'HEAD'])).trim())} ${chalk.gray('# primeira vez desta branch')}`);
-    console.log('');
-    console.log(chalk.yellow('💡 Use o comando que melhor se adequa à sua situação!'))
+    
+    const currentBranch = (await git.revparse(['--abbrev-ref', 'HEAD'])).trim();
+    
+    // 1. Gerar prompt para IA
+    console.log(chalk.cyan('1. 📝 Gerando prompt para IA...'));
+    const prPrompt = await generatePullRequestPrompt(git, pendingCommits, diffStats, remoteBranch, currentBranch, true);
+    
+    // 2. Chamar IA para gerar título e descrição
+    console.log(chalk.cyan('2. 🤖 Consultando IA para criar título e descrição...'));
+    const aiResponse = await sendPromptToAI(prPrompt);
+    
+    if (!aiResponse.success) {
+      console.error(chalk.red(`❌ Erro ao consultar IA: ${aiResponse.error}`));
+      return;
+    }
+    
+    // Parsear resposta da IA
+    const { title, description } = parsePRResponse(aiResponse.message!);
+    
+    console.log(chalk.green('✅ Título e descrição gerados!'));
+    console.log(chalk.yellow(`📋 Título: ${title}`));
+    console.log(chalk.gray(`📝 Descrição: ${description.substring(0, 100)}...`));
+    
+    // 3. Fazer push
+    console.log(chalk.cyan('3. 📤 Fazendo push para o repositório...'));
+    const pushSpinner = ora('Enviando commits...').start();
+    
+    try {
+      await git.push(['--set-upstream', 'origin', currentBranch]);
+      pushSpinner.succeed('Push realizado com sucesso!');
+    } catch (error) {
+      pushSpinner.fail(`Erro ao fazer push: ${error}`);
+      return;
+    }
+    
+    // 4. Gerar URL do PR
+    console.log(chalk.cyan('4. 🔗 Gerando URL automática do Pull Request...'));
+    const prUrl = await generatePRUrl(git, currentBranch, title, description);
+    
+    if (prUrl) {
+      // 5. Copiar para clipboard
+      await clipboardy.write(prUrl);
+      
+      console.log(chalk.green.bold('\n🎉 PROCESSO CONCLUÍDO!'));
+      console.log(chalk.gray('─'.repeat(50)));
+      console.log(`📤 Commits enviados: ${chalk.cyan(pendingCommits.total)}`);
+      console.log(`📂 Arquivos modificados: ${chalk.yellow(diffStats.files.length)}`);
+      console.log(`🌐 Remote: ${chalk.blue(remoteBranch)}`);
+      console.log('');
+      console.log(chalk.green('🔗 URL DO PULL REQUEST COPIADA PARA O CLIPBOARD!'));
+      console.log(chalk.gray('Cole a URL no navegador para criar o PR automaticamente:'));
+      console.log(chalk.cyan(prUrl));
+      
+    } else {
+      console.log(chalk.yellow('⚠️  Não foi possível gerar URL automática do PR'));
+      console.log('💡 Crie o PR manualmente no GitHub/GitLab');
+    }
     
   } catch (error) {
     spinner.fail(`Erro ao processar push: ${error}`);
@@ -246,6 +312,232 @@ function getFileIcon(filePath: string): string {
     case 'php': return '🐘';
     default: return '📄';
   }
+}
+
+async function generatePullRequestPrompt(
+  git: any, 
+  pendingCommits: any, 
+  diffStats: any, 
+  remoteBranch: string, 
+  currentBranch: string, 
+  includeDiff: boolean = false
+): Promise<string> {
+  try {
+    // Lê o template de PR se existir
+    let template = '';
+    const templatePath = '.github/pull_request_template.md';
+    
+    if (fs.existsSync(templatePath)) {
+      template = fs.readFileSync(templatePath, 'utf8');
+    } else {
+      // Template padrão se não existir
+      template = `#### Cenário
+- Faça uma breve descrição sobre o cenário no qual é aplicado o contexto.
+
+#### Problema
+- Faça uma breve explanação sobre o que a sua alteração está resolvendo.
+
+#### Solução
+- Escreva o que foi feito para resolver o problema descrito acima.`;
+    }
+
+    // Constrói informações dos commits
+    const commitsList = [...pendingCommits.all].reverse().map((commit: any, index: number) => {
+      const shortHash = commit.hash.substring(0, 7);
+      const message = commit.message.split('\n')[0];
+      const author = commit.author_name;
+      const date = new Date(commit.date).toLocaleDateString('pt-BR');
+      return `${index + 1}. ${shortHash} - ${message} (por ${author} em ${date})`;
+    }).join('\n');
+
+    // Constrói lista de arquivos modificados
+    const filesList = diffStats.files.map((file: any) => {
+      const insertions = 'insertions' in file ? file.insertions : 0;
+      const deletions = 'deletions' in file ? file.deletions : 0;
+      return `- ${file.file} (+${insertions} -${deletions} linhas)`;
+    }).join('\n');
+
+    // Obtém diff se solicitado
+    let diffContent = '';
+    if (includeDiff) {
+      try {
+        const diff = await git.diff([`${remoteBranch}..HEAD`]);
+        const diffLines = diff.split('\n');
+        const maxLines = 100; // Mais linhas para o contexto da IA
+        
+        if (diffLines.length > maxLines) {
+          diffContent = diffLines.slice(0, maxLines).join('\n') + 
+            `\n... (${diffLines.length - maxLines} linhas restantes omitidas)`;
+        } else {
+          diffContent = diff;
+        }
+      } catch (error) {
+        diffContent = 'Erro ao obter diff detalhado.';
+      }
+    }
+
+    // Monta o prompt
+    const prompt = `Atue como especialista em desenvolvimento de software. Com base nas informações abaixo sobre mudanças em um repositório git, crie um título conciso e uma descrição detalhada para um Pull Request seguindo o template fornecido.
+
+**INFORMAÇÕES DO PULL REQUEST:**
+- Branch atual: ${currentBranch}
+- Branch de destino: ${remoteBranch.replace('origin/', '')}
+- Total de commits: ${pendingCommits.total}
+- Arquivos modificados: ${diffStats.files.length}
+- Linhas adicionadas: ${diffStats.insertions}
+- Linhas removidas: ${diffStats.deletions}
+
+**COMMITS INCLUÍDOS:**
+${commitsList}
+
+**ARQUIVOS MODIFICADOS:**
+${filesList}
+
+${includeDiff && diffContent ? `**DIFERENÇAS (DIFF):**
+\`\`\`diff
+${diffContent}
+\`\`\`
+
+` : ''}**TEMPLATE DO PULL REQUEST:**
+${template}
+
+**INSTRUÇÕES:**
+1. Crie um título conciso e descritivo para o PR (máximo 60 caracteres)
+2. Preencha a descrição seguindo exatamente a estrutura do template fornecido
+3. Base-se nas informações dos commits e arquivos modificados
+4. Use linguagem clara e objetiva
+5. Foque no valor de negócio e no impacto da mudança
+6. Responda em português brasileiro
+
+**FORMATO DA RESPOSTA:**
+Título: [seu título aqui]
+
+Descrição:
+[sua descrição aqui seguindo o template]`;
+
+    return prompt;
+    
+  } catch (error) {
+    throw new Error(`Erro ao gerar prompt do PR: ${error}`);
+  }
+}
+
+function parsePRResponse(aiResponse: string): { title: string; description: string } {
+  try {
+    // Tenta extrair título e descrição da resposta da IA
+    const lines = aiResponse.split('\n');
+    let title = '';
+    let description = '';
+    let isDescription = false;
+    
+    for (const line of lines) {
+      if (line.toLowerCase().startsWith('título:') || line.toLowerCase().startsWith('title:')) {
+        title = line.replace(/^(título|title):\s*/i, '').trim();
+      } else if (line.toLowerCase().startsWith('descrição:') || line.toLowerCase().startsWith('description:')) {
+        isDescription = true;
+        const desc = line.replace(/^(descrição|description):\s*/i, '').trim();
+        if (desc) description += desc + '\n';
+      } else if (isDescription && line.trim()) {
+        description += line + '\n';
+      }
+    }
+    
+    // Fallbacks se não conseguir parsear
+    if (!title) {
+      title = aiResponse.split('\n')[0].substring(0, 60);
+    }
+    
+    if (!description) {
+      description = aiResponse;
+    }
+    
+    return {
+      title: title.trim(),
+      description: description.trim()
+    };
+    
+  } catch (error) {
+    // Fallback em caso de erro
+    return {
+      title: aiResponse.substring(0, 60),
+      description: aiResponse
+    };
+  }
+}
+
+async function generatePRUrl(git: any, branch: string, title: string, description: string): Promise<string | null> {
+  try {
+    // Obtém a URL do remote origin
+    const remotes = await git.getRemotes(true);
+    const origin = remotes.find((remote: any) => remote.name === 'origin');
+    
+    if (!origin || !origin.refs || !origin.refs.push) {
+      return null;
+    }
+    
+    const repoUrl = origin.refs.push;
+    
+    // Detecta se é GitHub ou GitLab
+    if (repoUrl.includes('github.com')) {
+      return generateGitHubPRUrl(repoUrl, branch, title, description);
+    } else if (repoUrl.includes('gitlab.com') || repoUrl.includes('gitlab')) {
+      return generateGitLabPRUrl(repoUrl, branch, title, description);
+    }
+    
+    return null;
+    
+  } catch (error) {
+    console.error(chalk.red(`Erro ao gerar URL do PR: ${error}`));
+    return null;
+  }
+}
+
+function convertSshToHttps(repoUrl: string): string {
+  // Converte SSH para HTTPS de forma genérica
+  // Padrão SSH: git@hostname:user/repo.git
+  // Padrão HTTPS: https://hostname/user/repo
+  
+  if (repoUrl.startsWith('git@')) {
+    // Extrai hostname e path do formato SSH
+    const sshPattern = /^git@([^:]+):(.+)$/;
+    const match = repoUrl.match(sshPattern);
+    
+    if (match) {
+      const hostname = match[1];
+      const path = match[2].replace('.git', '');
+      return `https://${hostname}/${path}`;
+    }
+  }
+  
+  // Se já é HTTPS ou outro formato, apenas remove .git se existir
+  return repoUrl.replace('.git', '');
+}
+
+function generateGitHubPRUrl(repoUrl: string, branch: string, title: string, description: string): string {
+  const httpsUrl = convertSshToHttps(repoUrl);
+  
+  // Parâmetros para URL do GitHub
+  const params = new URLSearchParams({
+    'quick_pull': '1',
+    'title': title,
+    'body': description
+  });
+  
+  return `${httpsUrl}/compare/master...${branch}?${params.toString()}`;
+}
+
+function generateGitLabPRUrl(repoUrl: string, branch: string, title: string, description: string): string {
+  const httpsUrl = convertSshToHttps(repoUrl);
+  
+  // Parâmetros para URL do GitLab
+  const params = new URLSearchParams({
+    'merge_request[source_branch]': branch,
+    'merge_request[target_branch]': 'master',
+    'merge_request[title]': title,
+    'merge_request[description]': description
+  });
+  
+  return `${httpsUrl}/-/merge_requests/new?${params.toString()}`;
 }
 
  

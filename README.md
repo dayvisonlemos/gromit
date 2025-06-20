@@ -192,80 +192,73 @@ gromit review --show-diff
 ```
 
 ### `gromit push`
-Mostra mudanças pendentes que ainda não foram enviadas ao repositório remoto:
-- **Valida mudanças não commitadas** - Alerta se há arquivos pendentes de commit
+⚠️ **Requer configuração obrigatória** (URL da IA + API Key)
+
+**Comando completo de push com geração automática de Pull Request:**
+- **Valida mudanças não commitadas** - Impede push se há arquivos pendentes de commit
 - Lista commits que serão enviados ao remote
 - Mostra resumo detalhado das mudanças
-- Exibe arquivos que serão enviados com estatísticas
-- **Fornece comandos git prontos** para fazer o push
-- **Preview de diff detalhado** (opcional com --show-diff)
+- **Gera título e descrição via IA** usando template do projeto
+- **Faz push automático** para o repositório remoto
+- **Cria URL de PR automática** (GitHub/GitLab)
+- **Copia URL para clipboard** para criação instantânea do PR
 
-- Orientações claras para próximos passos
+**🚀 Processo Automático (5 etapas):**
+1. **📝 Geração de prompt** - Cria contexto completo das mudanças
+2. **🤖 Consulta à IA** - Gera título e descrição personalizados
+3. **📤 Push automático** - Envia commits para o repositório remoto
+4. **🔗 Geração de URL** - Cria link direto para PR (GitHub/GitLab)
+5. **📋 Cópia para clipboard** - URL pronta para uso
 
-**🔍 Informações Exibidas:**
+**🔍 Validações Realizadas:**
 - **Mudanças não commitadas**: Detecta arquivos modificados que precisam de commit
 - **Remote configurado**: Verifica se existe origin configurado
 - **Commits pendentes**: Compara local vs remote para mostrar o que será enviado
-- **Estatísticas**: Total de arquivos, linhas adicionadas/removidas por arquivo
-
-**📋 Casos de Uso:**
-- Preview do que será enviado antes do push
-- Verificação de commits locais vs remote
-- Identificação de mudanças não commitadas
-- Orientação sobre comandos git apropriados
+- **Configuração da IA**: Valida URL e API Key antes de processar
 
 **✨ Características:**
-- **Apenas visualização** - Não faz push automático
-- Mostra exatamente o que será enviado
-- Sugere comandos git específicos para sua situação
-
-- Funciona sem configuração de IA
+- **Processo ponta-a-ponta** - Do código ao PR em um comando
+- **IA integrada** - Título e descrição contextualizados
+- **Multi-plataforma** - Suporte a GitHub e GitLab
+- **Template personalizado** - Usa template do projeto (CENÁRIO, PROBLEMA, SOLUÇÃO)
+- **URL automática** - Link direto para criar PR no navegador
 
 ```bash
-# Visualizar mudanças pendentes
+# Push completo com geração automática de PR
 gromit push
 
-# Mostrar mesmo com mudanças não commitadas
+# Push forçado (ignora mudanças não commitadas)
 gromit push --force
 
-# Mostrar diff detalhado das mudanças
+# Push com visualização detalhada do diff
 gromit push --show-diff
 
 # Combinar opções
 gromit push --force --show-diff
 
 # Exemplo de saída:
-# 🚫 MUDANÇAS NÃO COMMITADAS DETECTADAS
+# 🚀 INICIANDO PROCESSO AUTOMÁTICO:
 # ──────────────────────────────────────────────────
-# 📝 🟦 src/index.ts
-# ❓ 🟦 src/commands/push.ts
+# 1. 📝 Gerando prompt para IA...
+# 2. 🤖 Consultando IA para criar título e descrição...
+# ✅ Título e descrição gerados!
+# 📋 Título: feat(auth): implementa autenticação JWT
+# 📝 Descrição: #### Cenário...
+# 3. 📤 Fazendo push para o repositório...
+# ✅ Push realizado com sucesso!
+# 4. 🔗 Gerando URL automática do Pull Request...
 # 
-# 💡 VOCÊ PRECISA COMMITÁ-LAS PRIMEIRO:
+# 🎉 PROCESSO CONCLUÍDO!
 # ──────────────────────────────────────────────────
-# gromit commit # commit automático com IA
-#
-# Com commits pendentes:
-# 📋 COMMITS PENDENTES PARA PUSH (1):
-# ──────────────────────────────────────────────────
-# 1. abc123d feat(auth): adiciona autenticação JWT
-#    por João Silva em 20/06/2025
+# 📤 Commits enviados: 3
+# 📂 Arquivos modificados: 5
+# 🌐 Remote: origin/master
 # 
-# 🔍 PREVIEW DAS MUDANÇAS (DIFF): (com --show-diff)
-# ──────────────────────────────────────────────────
-# diff --git a/src/auth.ts b/src/auth.ts
-# +++ b/src/auth.ts
-# @@ -1,3 +1,8 @@
-# +export function authenticate(token: string) {
-# +  return validateJWT(token);
-# +}
+# 🔗 URL DO PULL REQUEST COPIADA PARA O CLIPBOARD!
+# Cole a URL no navegador para criar o PR automaticamente:
+# https://github.com/user/repo/compare/master...feature/auth?quick_pull=1&title=...
 #
-# 🚀 PRÓXIMOS PASSOS:
-# ──────────────────────────────────────────────────
-# git push # push padrão
-# git push origin feature/auth # push da branch atual
-#
-# 
-# 💡 Para gerar prompt de PR: gromit analyze --push
+# 💡 Para apenas análise: gromit analyze --push
 ```
 
 ### `gromit config`

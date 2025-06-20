@@ -11,6 +11,7 @@ Ferramenta CLI para análise de mudanças git e geração de commits via IA.
 - ✅ Integração com IA para geração automática de commits
 - ✅ Commit automático com mensagens geradas por IA
 - ✅ **Proteção de branches principais** (master, main, develop)
+- ✅ **Revisão de commits pendentes** antes do push
 - ✅ Validação de boas práticas de desenvolvimento  
 - ✅ Suporte multilíngue (pt-BR, es-UY, en-US)
 - ✅ Configuração flexível de IA (URL, API Key, modelo)
@@ -49,6 +50,7 @@ gromit analyze
 ## Configuração Obrigatória
 
 ⚠️ **IMPORTANTE**: Os comandos `analyze` e `commit` exigem configuração prévia da IA.
+💡 **NOVO**: O comando `review` não requer configuração e funciona apenas com git.
 
 Antes de usar o gromit, você deve configurar:
 1. **URL da API da IA** (ex: OpenAI, Claude, etc.)
@@ -112,6 +114,48 @@ gromit commit
 # 4. ⏸️  Aguarda confirmação (Enter)
 # 5. ➕ Adiciona arquivos (git add .)
 # 6. 📝 Faz commit
+```
+
+### `gromit review`
+Revisa commits locais pendentes antes do push para o repositório remoto:
+- Lista commits que ainda não foram enviados ao remote
+- Mostra resumo das mudanças (arquivos, linhas inseridas/removidas)  
+- Exibe arquivos modificados com ícones por tipo
+- Opção para preview das mudanças (diff)
+- Instruções claras dos próximos passos
+
+**🔍 Informações Exibidas:**
+- **Commits pendentes**: Lista numerada com hash, mensagem, autor e data
+- **Estatísticas**: Quantidade de arquivos, linhas adicionadas/removidas
+- **Arquivos modificados**: Lista com ícones específicos por tipo de arquivo
+- **Preview opcional**: Diff das mudanças (limitado a 50 linhas)
+
+**📋 Casos de Uso:**
+- Revisar mudanças antes do `git push`
+- Verificar se há commits esquecidos localmente
+- Validar alterações antes de enviar para review
+- Entender o impacto das mudanças
+
+```bash
+# Revisão básica dos commits pendentes
+gromit review
+
+# Revisão com preview das mudanças
+gromit review --show-diff
+
+# Exemplo de saída:
+# 📋 COMMITS PENDENTES PARA PUSH (2):
+# ──────────────────────────────────────────────────
+# 1. a1b2c3d feat(auth): adiciona autenticação JWT
+#    por João Silva em 20/06/2025
+# 2. d4e5f6g fix(ui): corrige layout responsivo
+#    por Maria Santos em 20/06/2025
+# 
+# 📊 RESUMO DAS MUDANÇAS:
+# ──────────────────────────────────────────────────
+# 📂 Arquivos modificados: 5
+# ➕ Linhas adicionadas: 127
+# ➖ Linhas removidas: 23
 ```
 
 ### `gromit config`

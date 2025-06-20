@@ -1,6 +1,7 @@
 import simpleGit from 'simple-git';
 import chalk from 'chalk';
 import ora from 'ora';
+import clipboardy from 'clipboardy';
 import { generateCommitPrompt } from '../utils/promptGenerator.js';
 import { validateConfig } from '../utils/config.js';
 
@@ -11,7 +12,7 @@ export interface FileChange {
   changes: number;
 }
 
-export async function analyzeChanges(): Promise<void> {
+export async function analyzeChanges(showPrompt: boolean = false): Promise<void> {
   // Verifica se a configuração é válida antes de prosseguir
   const configValidation = validateConfig();
   if (!configValidation.isValid) {
@@ -152,11 +153,26 @@ export async function analyzeChanges(): Promise<void> {
     }
     
     // Gera prompt para IA
-    console.log(chalk.blue.bold('\n🤖 PROMPT PARA IA:'));
-    console.log(chalk.gray('─'.repeat(50)));
-    
     const prompt = generateCommitPrompt(changedFiles, finalDiff);
-    console.log(chalk.cyan(prompt));
+    
+    // Copia o prompt para o clipboard automaticamente
+    try {
+      await clipboardy.write(prompt);
+      console.log(chalk.green.bold('\n📋 PROMPT COPIADO PARA O CLIPBOARD!'));
+      console.log(chalk.gray('Cole o prompt em sua IA favorita para gerar a mensagem de commit.'));
+    } catch (error) {
+      console.warn(chalk.yellow('⚠️  Não foi possível copiar para o clipboard:'), error);
+    }
+    
+    // Exibe o prompt apenas se solicitado
+    if (showPrompt) {
+      console.log(chalk.blue.bold('\n🤖 PROMPT PARA IA:'));
+      console.log(chalk.gray('─'.repeat(50)));
+      console.log(chalk.cyan(prompt));
+    } else {
+      console.log(chalk.blue.bold('\n💡 DICA:'));
+      console.log(`Use ${chalk.cyan('gromit analyze --show-prompt')} para ver o prompt completo.`);
+    }
     
   } catch (error) {
     spinner.fail(`Erro ao analisar repositório: ${error}`);

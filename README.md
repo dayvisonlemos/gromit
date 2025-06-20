@@ -68,7 +68,17 @@ Analisa as mudanças no repositório git atual e exibe:
 - Quantidade de linhas alteradas por arquivo
 - Resumo total das mudanças
 - Preview do diff das alterações
-- Prompt otimizado para IA gerar mensagem de commit
+- **Copia automaticamente** o prompt para o clipboard
+- Opções:
+  - `--show-prompt` - Exibe o prompt completo na tela
+
+```bash
+# Análise básica (prompt copiado automaticamente)
+gromit analyze
+
+# Análise com exibição do prompt
+gromit analyze --show-prompt
+```
 
 ### `gromit commit` (em desenvolvimento)
 ⚠️ **Requer configuração obrigatória** (URL da IA + API Key)

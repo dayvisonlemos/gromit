@@ -16,9 +16,10 @@ program
 program
   .command('analyze')
   .description('Analisa as mudanças no repositório git atual')
-  .action(async () => {
+  .option('--show-prompt', 'Exibe o prompt gerado para a IA')
+  .action(async (options) => {
     try {
-      await analyzeChanges();
+      await analyzeChanges(options.showPrompt);
     } catch (error) {
       console.error(chalk.red('Erro ao analisar mudanças:'), error);
       process.exit(1);

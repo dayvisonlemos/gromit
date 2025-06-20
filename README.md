@@ -105,11 +105,14 @@ gromit commit
 ```
 
 ### `gromit config`
-Gerencia configurações da IA (URL e chave da API):
+Gerencia configurações da IA (URL, chave da API e modelo):
 - `--url <url>` - Define a URL da API da IA
-- `--key <key>` - Define a chave da API da IA  
+- `--key <key>` - Define a chave da API da IA
+- `--model <model>` - Define o modelo da IA (ex: gpt-4-turbo, gpt-3.5-turbo)
 - `--show` - Mostra as configurações atuais
 - `--reset` - Remove todas as configurações
+
+**Modelo padrão:** `gpt-4.1` (usado se não configurado)
 
 Exemplos:
 ```bash
@@ -119,8 +122,11 @@ gromit config --url https://api.openai.com/v1/chat/completions
 # Configurar chave da API
 gromit config --key sk-sua-chave-da-api
 
-# Configurar ambos de uma vez
-gromit config --url https://api.openai.com/v1/chat/completions --key sk-sua-chave
+# Configurar modelo específico
+gromit config --model gpt-4-turbo
+
+# Configurar tudo de uma vez
+gromit config --url https://api.openai.com/v1/chat/completions --key sk-sua-chave --model gpt-4-turbo
 
 # Mostrar configurações atuais
 gromit config --show

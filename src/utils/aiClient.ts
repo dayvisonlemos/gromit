@@ -11,9 +11,12 @@ export async function sendPromptToAI(prompt: string): Promise<AIResponse> {
   try {
     const config = requireConfig();
     
+    // Usa o modelo configurado ou padrão
+    const model = config.model || "gpt-4.1";
+    
     // Corpo da requisição para APIs compatíveis com OpenAI
     const requestBody = {
-      model: "gpt-4.1", // Modelo GPT-4.1
+      model: model,
       messages: [
         {
           role: "user",

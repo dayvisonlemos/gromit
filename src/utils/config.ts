@@ -5,6 +5,7 @@ import os from 'os';
 export interface GromitConfig {
   aiUrl?: string;
   apiKey?: string;
+  model?: string;
 }
 
 const CONFIG_FILE_NAME = '.gromit.config';

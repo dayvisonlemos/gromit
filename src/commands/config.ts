@@ -4,6 +4,7 @@ import { loadConfig, updateConfig, getConfigPath, hasConfig, removeConfig } from
 export interface ConfigOptions {
   url?: string;
   key?: string;
+  model?: string;
   show?: boolean;
   reset?: boolean;
 }
@@ -23,7 +24,7 @@ export async function handleConfig(options: ConfigOptions): Promise<void> {
     }
 
     // Atualizar configurações
-    if (options.url || options.key) {
+    if (options.url || options.key || options.model) {
       updateConfiguration(options);
       return;
     }
@@ -47,12 +48,13 @@ function showConfig(): void {
     console.log(`📍 Arquivo: ${chalk.gray(configPath)}`);
     console.log(`🔗 URL da IA: ${config.aiUrl ? chalk.cyan(config.aiUrl) : chalk.gray('não configurada')}`);
     console.log(`🔑 API Key: ${config.apiKey ? chalk.green('configurada') : chalk.gray('não configurada')}`);
+    console.log(`🤖 Modelo: ${config.model ? chalk.magenta(config.model) : chalk.gray('padrão (gpt-4.1)')}`);
     
     if (config.apiKey) {
       const maskedKey = config.apiKey.length > 8 
         ? config.apiKey.substring(0, 4) + '*'.repeat(config.apiKey.length - 8) + config.apiKey.substring(config.apiKey.length - 4)
         : '*'.repeat(config.apiKey.length);
-      console.log(`   ${chalk.gray(`(${maskedKey})`)}`);
+      console.log(`   ${chalk.gray(`Chave: (${maskedKey})`)}`);
     }
   } else {
     console.log(chalk.yellow('Nenhuma configuração encontrada.'));
@@ -71,6 +73,10 @@ function updateConfiguration(options: ConfigOptions): void {
     updates.apiKey = options.key;
   }
 
+  if (options.model) {
+    updates.model = options.model;
+  }
+
   const config = updateConfig(updates);
   
   console.log(chalk.green.bold('✅ CONFIGURAÇÃO ATUALIZADA:'));
@@ -82,6 +88,10 @@ function updateConfiguration(options: ConfigOptions): void {
   
   if (options.key) {
     console.log(`🔑 API Key: ${chalk.green('configurada com sucesso')}`);
+  }
+
+  if (options.model) {
+    console.log(`🤖 Modelo: ${chalk.magenta(config.model)}`);
   }
   
   console.log(`📍 Salva em: ${chalk.gray(getConfigPath())}`);
@@ -105,7 +115,8 @@ function showHelp(): void {
   console.log('');
   console.log(`${chalk.cyan('gromit config --url')} https://api.openai.com/v1/chat/completions`);
   console.log(`${chalk.cyan('gromit config --key')} sk-sua-chave-da-api`);
-  console.log(`${chalk.cyan('gromit config --url')} https://api.openai.com/v1/chat/completions ${chalk.cyan('--key')} sk-sua-chave`);
+  console.log(`${chalk.cyan('gromit config --model')} gpt-4-turbo`);
+  console.log(`${chalk.cyan('gromit config --url')} https://api.openai.com/v1/chat/completions ${chalk.cyan('--key')} sk-sua-chave ${chalk.cyan('--model')} gpt-4-turbo`);
   console.log(`${chalk.cyan('gromit config --show')} ${chalk.gray('# mostrar configurações atuais')}`);
   console.log(`${chalk.cyan('gromit config --reset')} ${chalk.gray('# resetar todas as configurações')}`);
   console.log('');

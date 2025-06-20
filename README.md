@@ -12,6 +12,7 @@ Ferramenta CLI para análise de mudanças git e geração de commits via IA.
 - ✅ Commit automático com mensagens geradas por IA
 - ✅ **Proteção de branches principais** (master, main, develop)
 - ✅ **Revisão de commits pendentes** antes do push
+- ✅ **Preview de push** com validação prévia
 - ✅ Validação de boas práticas de desenvolvimento  
 - ✅ Suporte multilíngue (pt-BR, es-UY, en-US)
 - ✅ Configuração flexível de IA (URL, API Key, modelo)
@@ -49,8 +50,8 @@ gromit analyze
 
 ## Configuração Obrigatória
 
-⚠️ **IMPORTANTE**: Os comandos `analyze` e `commit` exigem configuração prévia da IA.
-💡 **NOVO**: O comando `review` não requer configuração e funciona apenas com git.
+⚠️ **IMPORTANTE**: Os comandos `analyze --commit` e `commit` exigem configuração prévia da IA.
+💡 **INDEPENDENTES**: Os comandos `analyze --push`, `review` e `push` não requerem configuração e funcionam apenas com git.
 
 Antes de usar o gromit, você deve configurar:
 1. **URL da API da IA** (ex: OpenAI, Claude, etc.)
@@ -67,23 +68,55 @@ gromit config --show
 ## Comandos Disponíveis
 
 ### `gromit analyze`
+Analisa mudanças no repositório git para diferentes propósitos:
+
+#### `gromit analyze --commit` (padrão)
 ⚠️ **Requer configuração obrigatória** (URL da IA + API Key)
 
-Analisa as mudanças no repositório git atual e exibe:
+Analisa mudanças locais para commit:
 - Lista de arquivos modificados
 - Quantidade de linhas alteradas por arquivo
 - Resumo total das mudanças
 - Preview do diff das alterações
 - **Copia automaticamente** o prompt para o clipboard
-- Opções:
-  - `--show-prompt` - Exibe o prompt completo na tela
+- Gera prompt contextualizado para IA criar mensagem de commit
+
+#### `gromit analyze --push`
+💡 **Não requer configuração** - funciona apenas com git
+
+Gera prompt para IA criar título e descrição do Pull Request:
+- Analisa commits pendentes vs remote
+- Inclui informações completas dos commits
+- Lista arquivos modificados com estatísticas
+- **Inclui diff detalhado** para contexto da IA
+- Usa template do projeto (CENÁRIO, PROBLEMA, SOLUÇÃO)
+- **Copia automaticamente** o prompt para o clipboard
 
 ```bash
-# Análise básica (prompt copiado automaticamente)
+# Análise para commit (comportamento padrão)
 gromit analyze
+gromit analyze --commit
 
-# Análise com exibição do prompt
-gromit analyze --show-prompt
+# Análise com exibição do prompt na tela
+gromit analyze --commit --show-prompt
+
+# Análise para Pull Request
+gromit analyze --push
+
+# Exemplo de saída --commit:
+# 📁 ARQUIVOS MODIFICADOS:
+# ──────────────────────────────────────────────────
+# 📄 src/auth.ts
+#    +25 -3 linhas alteradas
+# 📋 PROMPT COPIADO PARA O CLIPBOARD!
+#
+# Exemplo de saída --push:
+# 📝 PROMPT PARA PULL REQUEST GERADO!
+# ──────────────────────────────────────────────────
+# 📊 INFORMAÇÕES ANALISADAS:
+# 📦 Commits pendentes: 3
+# 📂 Arquivos modificados: 5
+# ✅ Prompt copiado para o clipboard!
 ```
 
 ### `gromit commit`
@@ -156,6 +189,83 @@ gromit review --show-diff
 # 📂 Arquivos modificados: 5
 # ➕ Linhas adicionadas: 127
 # ➖ Linhas removidas: 23
+```
+
+### `gromit push`
+Mostra mudanças pendentes que ainda não foram enviadas ao repositório remoto:
+- **Valida mudanças não commitadas** - Alerta se há arquivos pendentes de commit
+- Lista commits que serão enviados ao remote
+- Mostra resumo detalhado das mudanças
+- Exibe arquivos que serão enviados com estatísticas
+- **Fornece comandos git prontos** para fazer o push
+- **Preview de diff detalhado** (opcional com --show-diff)
+
+- Orientações claras para próximos passos
+
+**🔍 Informações Exibidas:**
+- **Mudanças não commitadas**: Detecta arquivos modificados que precisam de commit
+- **Remote configurado**: Verifica se existe origin configurado
+- **Commits pendentes**: Compara local vs remote para mostrar o que será enviado
+- **Estatísticas**: Total de arquivos, linhas adicionadas/removidas por arquivo
+
+**📋 Casos de Uso:**
+- Preview do que será enviado antes do push
+- Verificação de commits locais vs remote
+- Identificação de mudanças não commitadas
+- Orientação sobre comandos git apropriados
+
+**✨ Características:**
+- **Apenas visualização** - Não faz push automático
+- Mostra exatamente o que será enviado
+- Sugere comandos git específicos para sua situação
+
+- Funciona sem configuração de IA
+
+```bash
+# Visualizar mudanças pendentes
+gromit push
+
+# Mostrar mesmo com mudanças não commitadas
+gromit push --force
+
+# Mostrar diff detalhado das mudanças
+gromit push --show-diff
+
+# Combinar opções
+gromit push --force --show-diff
+
+# Exemplo de saída:
+# 🚫 MUDANÇAS NÃO COMMITADAS DETECTADAS
+# ──────────────────────────────────────────────────
+# 📝 🟦 src/index.ts
+# ❓ 🟦 src/commands/push.ts
+# 
+# 💡 VOCÊ PRECISA COMMITÁ-LAS PRIMEIRO:
+# ──────────────────────────────────────────────────
+# gromit commit # commit automático com IA
+#
+# Com commits pendentes:
+# 📋 COMMITS PENDENTES PARA PUSH (1):
+# ──────────────────────────────────────────────────
+# 1. abc123d feat(auth): adiciona autenticação JWT
+#    por João Silva em 20/06/2025
+# 
+# 🔍 PREVIEW DAS MUDANÇAS (DIFF): (com --show-diff)
+# ──────────────────────────────────────────────────
+# diff --git a/src/auth.ts b/src/auth.ts
+# +++ b/src/auth.ts
+# @@ -1,3 +1,8 @@
+# +export function authenticate(token: string) {
+# +  return validateJWT(token);
+# +}
+#
+# 🚀 PRÓXIMOS PASSOS:
+# ──────────────────────────────────────────────────
+# git push # push padrão
+# git push origin feature/auth # push da branch atual
+#
+# 
+# 💡 Para gerar prompt de PR: gromit analyze --push
 ```
 
 ### `gromit config`

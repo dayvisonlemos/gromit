@@ -50,8 +50,8 @@ gromit analyze
 
 ## Configuração Obrigatória
 
-⚠️ **IMPORTANTE**: Os comandos `analyze` e `commit` exigem configuração prévia da IA.
-💡 **INDEPENDENTES**: Os comandos `review` e `push` não requerem configuração e funcionam apenas com git.
+⚠️ **IMPORTANTE**: Os comandos `analyze --commit` e `commit` exigem configuração prévia da IA.
+💡 **INDEPENDENTES**: Os comandos `analyze --push`, `review` e `push` não requerem configuração e funcionam apenas com git.
 
 Antes de usar o gromit, você deve configurar:
 1. **URL da API da IA** (ex: OpenAI, Claude, etc.)
@@ -68,23 +68,55 @@ gromit config --show
 ## Comandos Disponíveis
 
 ### `gromit analyze`
+Analisa mudanças no repositório git para diferentes propósitos:
+
+#### `gromit analyze --commit` (padrão)
 ⚠️ **Requer configuração obrigatória** (URL da IA + API Key)
 
-Analisa as mudanças no repositório git atual e exibe:
+Analisa mudanças locais para commit:
 - Lista de arquivos modificados
 - Quantidade de linhas alteradas por arquivo
 - Resumo total das mudanças
 - Preview do diff das alterações
 - **Copia automaticamente** o prompt para o clipboard
-- Opções:
-  - `--show-prompt` - Exibe o prompt completo na tela
+- Gera prompt contextualizado para IA criar mensagem de commit
+
+#### `gromit analyze --push`
+💡 **Não requer configuração** - funciona apenas com git
+
+Gera prompt para IA criar título e descrição do Pull Request:
+- Analisa commits pendentes vs remote
+- Inclui informações completas dos commits
+- Lista arquivos modificados com estatísticas
+- **Inclui diff detalhado** para contexto da IA
+- Usa template do projeto (CENÁRIO, PROBLEMA, SOLUÇÃO)
+- **Copia automaticamente** o prompt para o clipboard
 
 ```bash
-# Análise básica (prompt copiado automaticamente)
+# Análise para commit (comportamento padrão)
 gromit analyze
+gromit analyze --commit
 
-# Análise com exibição do prompt
-gromit analyze --show-prompt
+# Análise com exibição do prompt na tela
+gromit analyze --commit --show-prompt
+
+# Análise para Pull Request
+gromit analyze --push
+
+# Exemplo de saída --commit:
+# 📁 ARQUIVOS MODIFICADOS:
+# ──────────────────────────────────────────────────
+# 📄 src/auth.ts
+#    +25 -3 linhas alteradas
+# 📋 PROMPT COPIADO PARA O CLIPBOARD!
+#
+# Exemplo de saída --push:
+# 📝 PROMPT PARA PULL REQUEST GERADO!
+# ──────────────────────────────────────────────────
+# 📊 INFORMAÇÕES ANALISADAS:
+# 📦 Commits pendentes: 3
+# 📂 Arquivos modificados: 5
+# ✅ Prompt copiado para o clipboard!
 ```
 
 ### `gromit commit`
@@ -167,7 +199,7 @@ Mostra mudanças pendentes que ainda não foram enviadas ao repositório remoto:
 - Exibe arquivos que serão enviados com estatísticas
 - **Fornece comandos git prontos** para fazer o push
 - **Preview de diff detalhado** (opcional com --show-diff)
-- **Geração de prompt para PR** (opcional com --generate-pr)
+
 - Orientações claras para próximos passos
 
 **🔍 Informações Exibidas:**
@@ -186,8 +218,7 @@ Mostra mudanças pendentes que ainda não foram enviadas ao repositório remoto:
 - **Apenas visualização** - Não faz push automático
 - Mostra exatamente o que será enviado
 - Sugere comandos git específicos para sua situação
-- **Gera prompt inteligente para IA** criar título e descrição do PR
-- Usa template existente do projeto (CENÁRIO, PROBLEMA, SOLUÇÃO)
+
 - Funciona sem configuração de IA
 
 ```bash
@@ -200,11 +231,8 @@ gromit push --force
 # Mostrar diff detalhado das mudanças
 gromit push --show-diff
 
-# Gerar prompt para IA criar título e descrição do PR
-gromit push --generate-pr
-
-# Combinar todas as opções
-gromit push --force --show-diff --generate-pr
+# Combinar opções
+gromit push --force --show-diff
 
 # Exemplo de saída:
 # 🚫 MUDANÇAS NÃO COMMITADAS DETECTADAS
@@ -236,14 +264,8 @@ gromit push --force --show-diff --generate-pr
 # git push # push padrão
 # git push origin feature/auth # push da branch atual
 #
-# 📝 PROMPT PARA PULL REQUEST: (com --generate-pr)
-# ──────────────────────────────────────────────────
-# ✅ Prompt copiado para o clipboard!
 # 
-# 🎯 INSTRUÇÕES:
-# 1. Cole este prompt na sua IA preferida (ChatGPT, Claude, etc.)
-# 2. A IA gerará o título e descrição do PR
-# 3. Use o resultado ao criar o Pull Request no GitHub/GitLab
+# 💡 Para gerar prompt de PR: gromit analyze --push
 ```
 
 ### `gromit config`

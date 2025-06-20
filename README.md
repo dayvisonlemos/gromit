@@ -10,9 +10,8 @@ Ferramenta CLI para análise de mudanças git e geração de commits via IA.
 - ✅ Geração de prompts para IA criar mensagens de commit
 - ✅ Integração com IA para geração automática de commits
 - ✅ Commit automático com mensagens geradas por IA
-- ✅ Push automático para repositório remoto
-- ✅ Detecção automática de templates de Pull Request
-- ✅ Geração de descrições de PR via IA
+- ✅ **Proteção de branches principais** (master, main, develop)
+- ✅ Validação de boas práticas de desenvolvimento  
 - ✅ Suporte multilíngue (pt-BR, es-UY, en-US)
 - ✅ Configuração flexível de IA (URL, API Key, modelo)
 
@@ -89,12 +88,18 @@ gromit analyze --show-prompt
 ⚠️ **Requer configuração obrigatória** (URL da IA + API Key)
 
 Funcionalidade completa de commit automático:
+- **Valida branch protegida** - Impede commits em master, main ou develop
 - Analisa as mudanças no repositório
 - Gera prompt otimizado para IA
 - Consulta a IA para criar mensagem de commit
 - Exibe a mensagem gerada para aprovação
 - Adiciona arquivos ao stage (`git add .`)
 - Faz o commit automaticamente
+
+**🚫 Proteção de Branches:**
+- Não permite commits diretos em: `master`, `main`, `develop`
+- Exibe mensagens informativas com sugestões de branches alternativas
+- Garante boas práticas de desenvolvimento com feature branches
 
 ```bash
 # Commit automático com IA
@@ -109,44 +114,7 @@ gromit commit
 # 6. 📝 Faz commit
 ```
 
-### `gromit push`
-⚠️ **Requer configuração obrigatória** (URL da IA + API Key)
 
-Funcionalidade completa de commit, push e geração de descrição de PR:
-- Faz commit automático (mesmo que o comando `commit`)
-- Realiza push para o repositório remoto
-- Detecta template de PR do repositório
-- Gera descrição de PR via IA baseada no template
-- Copia a descrição gerada para o clipboard
-
-**Detecção de Template de PR:**
-- Procura por templates em vários locais padrão:
-  - `.github/pull_request_template.md`
-  - `.github/PULL_REQUEST_TEMPLATE.md`
-  - `docs/pull_request_template.md`
-  - E outros locais comuns
-
-**Formato de Descrição:**
-- **Com template**: Usa o template encontrado como estrutura
-- **Sem template**: Usa formato padrão **Cenário, Problema, Solução**
-- **Multilíngue**: Suporta pt-BR, es-UY, en-US
-
-```bash
-# Push completo com IA
-gromit push
-
-# O processo:
-# 1. 🔍 Analisa mudanças
-# 2. 🤖 Gera mensagem de commit
-# 3. 💬 Mostra mensagem gerada
-# 4. ⏸️  Aguarda confirmação (Enter)
-# 5. ➕ Adiciona arquivos (git add .)
-# 6. 📝 Faz commit
-# 7. 🚀 Faz push
-# 8. 🔍 Procura template de PR
-# 9. 🤖 Gera descrição de PR
-# 10. 📋 Copia descrição para clipboard
-```
 
 ### `gromit config`
 Gerencia configurações da IA (URL, chave da API, modelo e linguagem):

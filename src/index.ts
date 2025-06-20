@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
-import { analyzeChanges } from './commands/analyze.js';
+import { analyzeChanges, analyzeForPush } from './commands/analyze.js';
 import { commitChanges } from './commands/commit.js';
 import { handleConfig } from './commands/config.js';
 import { reviewChanges } from './commands/review.js';
@@ -17,11 +17,22 @@ program
 
 program
   .command('analyze')
-  .description('Analisa as mudanças no repositório git atual')
-  .option('--show-prompt', 'Exibe o prompt gerado para a IA')
+  .description('Analisa mudanças no repositório git para diferentes propósitos')
+  .option('--commit', 'Analisa mudanças locais para commit (padrão)')
+  .option('--push', 'Gera prompt para IA criar título e descrição do Pull Request')
+  .option('--show-prompt', 'Exibe o prompt gerado para a IA (apenas com --commit)')
   .action(async (options) => {
     try {
-      await analyzeChanges(options.showPrompt);
+      // Se nenhuma opção específica, usa --commit como padrão
+      if (!options.commit && !options.push) {
+        options.commit = true;
+      }
+      
+      if (options.push) {
+        await analyzeForPush();
+      } else {
+        await analyzeChanges(options.showPrompt);
+      }
     } catch (error) {
       console.error(chalk.red('Erro ao analisar mudanças:'), error);
       process.exit(1);
@@ -58,10 +69,9 @@ program
   .description('Mostra mudanças pendentes que ainda não foram enviadas ao repositório remoto')
   .option('--force', 'Mostra mesmo com mudanças não commitadas')
   .option('--show-diff', 'Exibe o preview detalhado das mudanças (diff)')
-  .option('--generate-pr', 'Gera prompt para IA criar título e descrição do Pull Request')
   .action(async (options) => {
     try {
-      await pushChanges(options.force, options.showDiff, options.generatePr);
+      await pushChanges(options.force, options.showDiff);
     } catch (error) {
       console.error(chalk.red('Erro ao verificar mudanças:'), error);
       process.exit(1);

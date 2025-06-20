@@ -4,6 +4,7 @@ import { Command } from 'commander';
 import { analyzeChanges } from './commands/analyze.js';
 import { commitChanges } from './commands/commit.js';
 import { handleConfig } from './commands/config.js';
+import { pushChanges } from './commands/push.js';
 import chalk from 'chalk';
 
 const program = new Command();
@@ -34,6 +35,18 @@ program
       await commitChanges();
     } catch (error) {
       console.error(chalk.red('Erro ao fazer commit:'), error);
+      process.exit(1);
+    }
+  });
+
+program
+  .command('push')
+  .description('Faz commit via IA, push e gera descrição de PR baseada em template')
+  .action(async () => {
+    try {
+      await pushChanges();
+    } catch (error) {
+      console.error(chalk.red('Erro ao fazer push:'), error);
       process.exit(1);
     }
   });

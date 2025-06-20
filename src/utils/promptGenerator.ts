@@ -111,31 +111,166 @@ ${instructions.footer}`;
   return prompt;
 }
 
-export function generatePRPrompt(changedFiles: FileChange[], diff: string, commitMessage: string): string {
-  const prompt = `Baseado nas mudanças realizadas e na mensagem de commit, gere uma descrição de Pull Request em português:
+export function generatePRPrompt(changedFiles: FileChange[], diff: string, prTemplate: string | null): string {
+  const config = loadConfig();
+  const language = config.language || 'en-US';
+  
+  const filesList = changedFiles.map(file => 
+    `- ${file.file} (+${file.insertions}/-${file.deletions})`
+  ).join('\n');
+  
+  const diffPreview = diff.split('\n').slice(0, 150).join('\n');
+  
+  let prompt = '';
+  
+  if (prTemplate) {
+    // Se existe template, usa o template como base
+    if (language === 'pt-BR') {
+      prompt = `Baseado no template de Pull Request e nas mudanças realizadas, gere uma descrição de PR em português:
 
-MENSAGEM DE COMMIT:
-${commitMessage}
+TEMPLATE DE PR:
+${prTemplate}
 
 MUDANÇAS REALIZADAS:
-${changedFiles.map(file => `- ${file.file} (+${file.insertions}/-${file.deletions})`).join('\n')}
+${filesList}
 
 DIFF DAS MUDANÇAS:
-${diff.split('\n').slice(0, 150).join('\n')}
+${diffPreview}
 
 INSTRUÇÕES:
-1. Gere uma descrição clara e profissional
-2. Inclua:
-   - Resumo das mudanças
-   - Motivação/contexto
-   - Lista de alterações principais
-   - Impacto esperado (se relevante)
-
-3. Use formato markdown
-4. Seja conciso mas informativo
+1. Use o template como estrutura base
+2. Preencha as seções do template com informações relevantes das mudanças
+3. Seja específico e técnico onde necessário
+4. Use formato markdown
 5. Escreva em português
+6. Substitua placeholders como "Item 1", "Item 2" com informações reais
+
+Responda apenas com a descrição do PR preenchida.`;
+    } else if (language.startsWith('es')) {
+      prompt = `Basado en el template de Pull Request y los cambios realizados, genera una descripción de PR en español:
+
+TEMPLATE DE PR:
+${prTemplate}
+
+CAMBIOS REALIZADOS:
+${filesList}
+
+DIFF DE LOS CAMBIOS:
+${diffPreview}
+
+INSTRUCCIONES:
+1. Usa el template como estructura base
+2. Completa las secciones del template con información relevante de los cambios
+3. Sé específico y técnico donde sea necesario
+4. Usa formato markdown
+5. Escribe en español
+6. Reemplaza placeholders como "Item 1", "Item 2" con información real
+
+Responde únicamente con la descripción del PR completada.`;
+    } else {
+      prompt = `Based on the Pull Request template and the changes made, generate a PR description in English:
+
+PR TEMPLATE:
+${prTemplate}
+
+CHANGES MADE:
+${filesList}
+
+DIFF OF CHANGES:
+${diffPreview}
+
+INSTRUCTIONS:
+1. Use the template as base structure
+2. Fill the template sections with relevant information from the changes
+3. Be specific and technical where necessary
+4. Use markdown format
+5. Write in English
+6. Replace placeholders like "Item 1", "Item 2" with real information
+
+Respond only with the filled PR description.`;
+    }
+  } else {
+    // Se não existe template, usa o padrão Cenário, Problema, Solução
+    if (language === 'pt-BR') {
+      prompt = `Baseado nas mudanças realizadas, gere uma descrição de Pull Request em português usando o formato Cenário, Problema, Solução:
+
+MUDANÇAS REALIZADAS:
+${filesList}
+
+DIFF DAS MUDANÇAS:
+${diffPreview}
+
+INSTRUÇÕES:
+1. Use o formato:
+   #### Cenário
+   - Descreva o contexto/situação atual
+   
+   #### Problema
+   - Explique o problema que estava sendo resolvido
+   
+   #### Solução
+   - Descreva como o problema foi resolvido
+
+2. Seja específico e técnico
+3. Use formato markdown
+4. Escreva em português
+5. Base-se nas mudanças do código para inferir contexto
 
 Responda apenas com a descrição do PR.`;
+    } else if (language.startsWith('es')) {
+      prompt = `Basado en los cambios realizados, genera una descripción de Pull Request en español usando el formato Escenario, Problema, Solución:
 
+CAMBIOS REALIZADOS:
+${filesList}
+
+DIFF DE LOS CAMBIOS:
+${diffPreview}
+
+INSTRUCCIONES:
+1. Usa el formato:
+   #### Escenario
+   - Describe el contexto/situación actual
+   
+   #### Problema
+   - Explica el problema que se estaba resolviendo
+   
+   #### Solución
+   - Describe cómo se resolvió el problema
+
+2. Sé específico y técnico
+3. Usa formato markdown
+4. Escribe en español
+5. Basáte en los cambios del código para inferir contexto
+
+Responde únicamente con la descripción del PR.`;
+    } else {
+      prompt = `Based on the changes made, generate a Pull Request description in English using the Scenario, Problem, Solution format:
+
+CHANGES MADE:
+${filesList}
+
+DIFF OF CHANGES:
+${diffPreview}
+
+INSTRUCTIONS:
+1. Use the format:
+   #### Scenario
+   - Describe the current context/situation
+   
+   #### Problem
+   - Explain the problem that was being solved
+   
+   #### Solution
+   - Describe how the problem was solved
+
+2. Be specific and technical
+3. Use markdown format
+4. Write in English
+5. Base on code changes to infer context
+
+Respond only with the PR description.`;
+    }
+  }
+  
   return prompt;
 } 

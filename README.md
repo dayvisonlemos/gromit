@@ -8,8 +8,13 @@ Ferramenta CLI para análise de mudanças git e geração de commits via IA.
 - ✅ Visualização de estatísticas de mudanças (inserções/deleções)
 - ✅ Preview das diferenças (diff)
 - ✅ Geração de prompts para IA criar mensagens de commit
-- 🚧 Integração com IA para geração automática de commits (em desenvolvimento)
-- 🚧 Geração de descrições de Pull Request (em desenvolvimento)
+- ✅ Integração com IA para geração automática de commits
+- ✅ Commit automático com mensagens geradas por IA
+- ✅ Push automático para repositório remoto
+- ✅ Detecção automática de templates de Pull Request
+- ✅ Geração de descrições de PR via IA
+- ✅ Suporte multilíngue (pt-BR, es-UY, en-US)
+- ✅ Configuração flexível de IA (URL, API Key, modelo)
 
 ## Instalação
 
@@ -102,6 +107,45 @@ gromit commit
 # 4. ⏸️  Aguarda confirmação (Enter)
 # 5. ➕ Adiciona arquivos (git add .)
 # 6. 📝 Faz commit
+```
+
+### `gromit push`
+⚠️ **Requer configuração obrigatória** (URL da IA + API Key)
+
+Funcionalidade completa de commit, push e geração de descrição de PR:
+- Faz commit automático (mesmo que o comando `commit`)
+- Realiza push para o repositório remoto
+- Detecta template de PR do repositório
+- Gera descrição de PR via IA baseada no template
+- Copia a descrição gerada para o clipboard
+
+**Detecção de Template de PR:**
+- Procura por templates em vários locais padrão:
+  - `.github/pull_request_template.md`
+  - `.github/PULL_REQUEST_TEMPLATE.md`
+  - `docs/pull_request_template.md`
+  - E outros locais comuns
+
+**Formato de Descrição:**
+- **Com template**: Usa o template encontrado como estrutura
+- **Sem template**: Usa formato padrão **Cenário, Problema, Solução**
+- **Multilíngue**: Suporta pt-BR, es-UY, en-US
+
+```bash
+# Push completo com IA
+gromit push
+
+# O processo:
+# 1. 🔍 Analisa mudanças
+# 2. 🤖 Gera mensagem de commit
+# 3. 💬 Mostra mensagem gerada
+# 4. ⏸️  Aguarda confirmação (Enter)
+# 5. ➕ Adiciona arquivos (git add .)
+# 6. 📝 Faz commit
+# 7. 🚀 Faz push
+# 8. 🔍 Procura template de PR
+# 9. 🤖 Gera descrição de PR
+# 10. 📋 Copia descrição para clipboard
 ```
 
 ### `gromit config`

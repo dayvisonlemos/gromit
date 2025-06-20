@@ -83,4 +83,58 @@ export async function generateCommitMessage(prompt: string): Promise<string | nu
     console.error(chalk.yellow(response.error || 'Erro desconhecido'));
     return null;
   }
+}
+
+export async function generatePRDescription(prompt: string): Promise<string | null> {
+  console.log(chalk.cyan('🔄 Gerando descrição de PR via IA...'));
+  
+  // Usa configuração diferente para PR (mais tokens, temperatura mais alta)
+  try {
+    const config = requireConfig();
+    
+    const model = config.model || "gpt-4.1";
+    
+    const requestBody = {
+      model: model,
+      messages: [
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      max_tokens: 500, // Mais tokens para descrição de PR
+      temperature: 0.5 // Temperatura um pouco mais alta para criatividade
+    };
+
+    const response = await fetch(config.aiUrl!, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${config.apiKey}`
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(chalk.red('❌ Erro da API:'), errorText);
+      return null;
+    }
+
+    const data = await response.json() as any;
+    
+    if (data.choices && data.choices[0] && data.choices[0].message) {
+      const aiMessage = data.choices[0].message.content.trim();
+      console.log(chalk.green('✅ Descrição de PR gerada com sucesso!'));
+      return aiMessage;
+    } else {
+      console.error(chalk.red('❌ Formato de resposta inválido da IA'));
+      return null;
+    }
+
+  } catch (error) {
+    console.error(chalk.red('❌ Erro ao gerar descrição de PR:'));
+    console.error(chalk.yellow(`${error}`));
+    return null;
+  }
 } 

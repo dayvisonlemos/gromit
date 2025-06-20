@@ -12,6 +12,7 @@ Ferramenta CLI para análise de mudanças git e geração de commits via IA.
 - ✅ Commit automático com mensagens geradas por IA
 - ✅ **Proteção de branches principais** (master, main, develop)
 - ✅ **Revisão de commits pendentes** antes do push
+- ✅ **Push inteligente** com validação prévia
 - ✅ Validação de boas práticas de desenvolvimento  
 - ✅ Suporte multilíngue (pt-BR, es-UY, en-US)
 - ✅ Configuração flexível de IA (URL, API Key, modelo)
@@ -50,7 +51,7 @@ gromit analyze
 ## Configuração Obrigatória
 
 ⚠️ **IMPORTANTE**: Os comandos `analyze` e `commit` exigem configuração prévia da IA.
-💡 **NOVO**: O comando `review` não requer configuração e funciona apenas com git.
+💡 **INDEPENDENTES**: Os comandos `review` e `push` não requerem configuração e funcionam apenas com git.
 
 Antes de usar o gromit, você deve configurar:
 1. **URL da API da IA** (ex: OpenAI, Claude, etc.)
@@ -154,6 +155,64 @@ gromit review --show-diff
 # 📊 RESUMO DAS MUDANÇAS:
 # ──────────────────────────────────────────────────
 # 📂 Arquivos modificados: 5
+# ➕ Linhas adicionadas: 127
+# ➖ Linhas removidas: 23
+```
+
+### `gromit push`
+Verifica mudanças pendentes e faz push inteligente para o repositório remoto:
+- **Valida mudanças não commitadas** - Impede push se há arquivos pendentes de commit
+- Lista commits que serão enviados ao remote
+- Mostra resumo detalhado das mudanças
+- Exibe arquivos que serão enviados com estatísticas
+- Solicita confirmação antes de enviar
+- Fornece soluções em caso de erro
+
+**🛡️ Validações Realizadas:**
+- **Mudanças não commitadas**: Detecta arquivos modificados que precisam de commit
+- **Remote configurado**: Verifica se existe origin configurado
+- **Commits pendentes**: Compara local vs remote para mostrar o que será enviado
+- **Confirmação**: Solicita aprovação antes do push efetivo
+
+**📋 Casos de Uso:**
+- Push seguro com validação prévia
+- Revisão do que será enviado antes de confirmar
+- Detecção de problemas antes do push
+- Orientação em caso de erros
+
+**🚫 Proteções:**
+- Bloqueia push se há mudanças não commitadas
+- Mostra exatamente o que será enviado
+- Solicita confirmação explícita
+- Fornece soluções para problemas comuns
+
+```bash
+# Push básico com validação
+gromit push
+
+# Push forçado (ignora mudanças não commitadas)
+gromit push --force
+
+# Exemplo de saída:
+# 🚫 MUDANÇAS NÃO COMMITADAS DETECTADAS
+# ──────────────────────────────────────────────────
+# 📝 🟦 src/index.ts
+# ❓ 🟦 src/commands/push.ts
+# 
+# 💡 VOCÊ PRECISA COMMITÁ-LAS PRIMEIRO:
+# ──────────────────────────────────────────────────
+# gromit commit # commit automático com IA
+# git add . && git commit -m "mensagem" # commit manual
+#
+# Ou após commit:
+# 📋 COMMITS PENDENTES PARA PUSH (1):
+# ──────────────────────────────────────────────────
+# 1. abc123d feat(auth): adiciona autenticação JWT
+#    por João Silva em 20/06/2025
+# 
+# 📊 RESUMO DAS MUDANÇAS A SEREM ENVIADAS:
+# ──────────────────────────────────────────────────
+# 📂 Arquivos modificados: 3
 # ➕ Linhas adicionadas: 127
 # ➖ Linhas removidas: 23
 ```

@@ -1,5 +1,11 @@
 import chalk from 'chalk';
-import { loadConfig, updateConfig, getConfigPath, hasConfig, removeConfig } from '../utils/config.js';
+import {
+  loadConfig,
+  updateConfig,
+  getConfigPath,
+  hasConfig,
+  removeConfig
+} from '../utils/config.js';
 
 export interface ConfigOptions {
   url?: string;
@@ -44,18 +50,29 @@ function showConfig(): void {
 
   console.log(chalk.blue.bold('📋 CONFIGURAÇÕES ATUAIS:'));
   console.log(chalk.gray('─'.repeat(50)));
-  
+
   if (hasConfig()) {
     console.log(`📍 Arquivo: ${chalk.gray(configPath)}`);
-    console.log(`🔗 URL da IA: ${config.aiUrl ? chalk.cyan(config.aiUrl) : chalk.gray('não configurada')}`);
-    console.log(`🔑 API Key: ${config.apiKey ? chalk.green('configurada') : chalk.gray('não configurada')}`);
-    console.log(`🤖 Modelo: ${config.model ? chalk.magenta(config.model) : chalk.gray('padrão (gpt-4.1)')}`);
-    console.log(`🌐 Linguagem: ${config.language ? chalk.blue(config.language) : chalk.gray('padrão (en-US)')}`);
-    
+    console.log(
+      `🔗 URL da IA: ${config.aiUrl ? chalk.cyan(config.aiUrl) : chalk.gray('não configurada')}`
+    );
+    console.log(
+      `🔑 API Key: ${config.apiKey ? chalk.green('configurada') : chalk.gray('não configurada')}`
+    );
+    console.log(
+      `🤖 Modelo: ${config.model ? chalk.magenta(config.model) : chalk.gray('padrão (gpt-4.1)')}`
+    );
+    console.log(
+      `🌐 Linguagem: ${config.language ? chalk.blue(config.language) : chalk.gray('padrão (en-US)')}`
+    );
+
     if (config.apiKey) {
-      const maskedKey = config.apiKey.length > 8 
-        ? config.apiKey.substring(0, 4) + '*'.repeat(config.apiKey.length - 8) + config.apiKey.substring(config.apiKey.length - 4)
-        : '*'.repeat(config.apiKey.length);
+      const maskedKey =
+        config.apiKey.length > 8
+          ? config.apiKey.substring(0, 4) +
+            '*'.repeat(config.apiKey.length - 8) +
+            config.apiKey.substring(config.apiKey.length - 4)
+          : '*'.repeat(config.apiKey.length);
       console.log(`   ${chalk.gray(`Chave: (${maskedKey})`)}`);
     }
   } else {
@@ -66,11 +83,11 @@ function showConfig(): void {
 
 function updateConfiguration(options: ConfigOptions): void {
   const updates: any = {};
-  
+
   if (options.url) {
     updates.aiUrl = options.url;
   }
-  
+
   if (options.key) {
     updates.apiKey = options.key;
   }
@@ -84,14 +101,14 @@ function updateConfiguration(options: ConfigOptions): void {
   }
 
   const config = updateConfig(updates);
-  
+
   console.log(chalk.green.bold('✅ CONFIGURAÇÃO ATUALIZADA:'));
   console.log(chalk.gray('─'.repeat(50)));
-  
+
   if (options.url) {
     console.log(`🔗 URL da IA: ${chalk.cyan(config.aiUrl)}`);
   }
-  
+
   if (options.key) {
     console.log(`🔑 API Key: ${chalk.green('configurada com sucesso')}`);
   }
@@ -103,7 +120,7 @@ function updateConfiguration(options: ConfigOptions): void {
   if (options.language) {
     console.log(`🌐 Linguagem: ${chalk.blue(config.language)}`);
   }
-  
+
   console.log(`📍 Salva em: ${chalk.gray(getConfigPath())}`);
 }
 
@@ -127,10 +144,16 @@ function showHelp(): void {
   console.log(`${chalk.cyan('gromit config --key')} sk-sua-chave-da-api`);
   console.log(`${chalk.cyan('gromit config --model')} gpt-4-turbo`);
   console.log(`${chalk.cyan('gromit config --language')} pt-BR`);
-  console.log(`${chalk.cyan('gromit config --url')} https://api.openai.com/v1/chat/completions ${chalk.cyan('--key')} sk-sua-chave ${chalk.cyan('--model')} gpt-4-turbo ${chalk.cyan('--language')} pt-BR`);
-  console.log(`${chalk.cyan('gromit config --show')} ${chalk.gray('# mostrar configurações atuais')}`);
-  console.log(`${chalk.cyan('gromit config --reset')} ${chalk.gray('# resetar todas as configurações')}`);
+  console.log(
+    `${chalk.cyan('gromit config --url')} https://api.openai.com/v1/chat/completions ${chalk.cyan('--key')} sk-sua-chave ${chalk.cyan('--model')} gpt-4-turbo ${chalk.cyan('--language')} pt-BR`
+  );
+  console.log(
+    `${chalk.cyan('gromit config --show')} ${chalk.gray('# mostrar configurações atuais')}`
+  );
+  console.log(
+    `${chalk.cyan('gromit config --reset')} ${chalk.gray('# resetar todas as configurações')}`
+  );
   console.log('');
   console.log(chalk.gray('As configurações são salvas em:'));
   console.log(chalk.gray(getConfigPath()));
-} 
+}

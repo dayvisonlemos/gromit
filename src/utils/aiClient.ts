@@ -10,16 +10,16 @@ export interface AIResponse {
 export async function sendPromptToAI(prompt: string): Promise<AIResponse> {
   try {
     const config = requireConfig();
-    
+
     // Usa o modelo configurado ou padrão
-    const model = config.model || "gpt-4.1";
-    
+    const model = config.model || 'gpt-4.1';
+
     // Corpo da requisição para APIs compatíveis com OpenAI
     const requestBody = {
       model: model,
       messages: [
         {
-          role: "user",
+          role: 'user',
           content: prompt
         }
       ],
@@ -28,12 +28,12 @@ export async function sendPromptToAI(prompt: string): Promise<AIResponse> {
     };
 
     console.log(chalk.blue('🤖 Enviando prompt para IA...'));
-    
+
     const response = await fetch(config.aiUrl!, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${config.apiKey}`
+        Authorization: `Bearer ${config.apiKey}`
       },
       body: JSON.stringify(requestBody)
     });
@@ -46,8 +46,8 @@ export async function sendPromptToAI(prompt: string): Promise<AIResponse> {
       };
     }
 
-    const data = await response.json() as any;
-    
+    const data = (await response.json()) as any;
+
     // Extrai a mensagem da resposta
     if (data.choices && data.choices[0] && data.choices[0].message) {
       const aiMessage = data.choices[0].message.content.trim();
@@ -61,7 +61,6 @@ export async function sendPromptToAI(prompt: string): Promise<AIResponse> {
         error: 'Formato de resposta inválido da IA'
       };
     }
-
   } catch (error) {
     return {
       success: false,
@@ -72,9 +71,9 @@ export async function sendPromptToAI(prompt: string): Promise<AIResponse> {
 
 export async function generateCommitMessage(prompt: string): Promise<string | null> {
   console.log(chalk.cyan('🔄 Gerando mensagem de commit via IA...'));
-  
+
   const response = await sendPromptToAI(prompt);
-  
+
   if (response.success && response.message) {
     console.log(chalk.green('✅ Mensagem de commit gerada com sucesso!'));
     return response.message;
@@ -84,5 +83,3 @@ export async function generateCommitMessage(prompt: string): Promise<string | nu
     return null;
   }
 }
-
- 

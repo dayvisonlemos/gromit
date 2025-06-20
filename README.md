@@ -114,8 +114,6 @@ gromit commit
 # 6. 📝 Faz commit
 ```
 
-
-
 ### `gromit config`
 Gerencia configurações da IA (URL, chave da API, modelo e linguagem):
 - `--url <url>` - Define a URL da API da IA

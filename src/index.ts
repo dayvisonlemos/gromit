@@ -4,6 +4,7 @@ import { Command } from 'commander';
 import { analyzeChanges } from './commands/analyze.js';
 import { commitChanges } from './commands/commit.js';
 import { handleConfig } from './commands/config.js';
+import { reviewChanges } from './commands/review.js';
 import chalk from 'chalk';
 
 const program = new Command();
@@ -34,6 +35,19 @@ program
       await commitChanges();
     } catch (error) {
       console.error(chalk.red('Erro ao fazer commit:'), error);
+      process.exit(1);
+    }
+  });
+
+program
+  .command('review')
+  .description('Revisa commits locais pendentes antes do push')
+  .option('--show-diff', 'Exibe o preview das mudanças')
+  .action(async (options) => {
+    try {
+      await reviewChanges(options.showDiff);
+    } catch (error) {
+      console.error(chalk.red('Erro ao revisar mudanças:'), error);
       process.exit(1);
     }
   });

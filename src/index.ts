@@ -2,6 +2,7 @@
 
 import { Command } from 'commander';
 import { analyzeChanges } from './commands/analyze.js';
+import { handleConfig } from './commands/config.js';
 import chalk from 'chalk';
 
 const program = new Command();
@@ -28,6 +29,22 @@ program
   .description('Gera uma mensagem de commit baseada nas mudanças atuais')
   .action(async () => {
     console.log(chalk.yellow('Funcionalidade em desenvolvimento...'));
+  });
+
+program
+  .command('config')
+  .description('Configura URL da IA e chave da API')
+  .option('--url <url>', 'URL da API da IA')
+  .option('--key <key>', 'Chave da API da IA')
+  .option('--show', 'Mostrar configurações atuais')
+  .option('--reset', 'Resetar todas as configurações')
+  .action(async (options) => {
+    try {
+      await handleConfig(options);
+    } catch (error) {
+      console.error(chalk.red('Erro ao processar configuração:'), error);
+      process.exit(1);
+    }
   });
 
 if (process.argv.length === 2) {

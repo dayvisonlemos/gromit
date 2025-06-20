@@ -55,6 +55,31 @@ Analisa as mudanças no repositório git atual e exibe:
 ### `gromit commit` (em desenvolvimento)
 Gerará automaticamente uma mensagem de commit usando IA baseada nas mudanças atuais.
 
+### `gromit config`
+Gerencia configurações da IA (URL e chave da API):
+- `--url <url>` - Define a URL da API da IA
+- `--key <key>` - Define a chave da API da IA  
+- `--show` - Mostra as configurações atuais
+- `--reset` - Remove todas as configurações
+
+Exemplos:
+```bash
+# Configurar URL da IA
+gromit config --url https://api.openai.com/v1/chat/completions
+
+# Configurar chave da API
+gromit config --key sk-sua-chave-da-api
+
+# Configurar ambos de uma vez
+gromit config --url https://api.openai.com/v1/chat/completions --key sk-sua-chave
+
+# Mostrar configurações atuais
+gromit config --show
+
+# Resetar configurações
+gromit config --reset
+```
+
 ## Estrutura do Projeto
 
 ```

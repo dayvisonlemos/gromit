@@ -169,9 +169,6 @@ export async function analyzeChanges(showPrompt: boolean = false): Promise<void>
       console.log(chalk.blue.bold('\n🤖 PROMPT PARA IA:'));
       console.log(chalk.gray('─'.repeat(50)));
       console.log(chalk.cyan(prompt));
-    } else {
-      console.log(chalk.blue.bold('\n💡 DICA:'));
-      console.log(`Use ${chalk.cyan('gromit analyze --show-prompt')} para ver o prompt completo.`);
     }
     
   } catch (error) {
